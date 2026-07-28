@@ -15,7 +15,9 @@ return new class extends Migration
         Schema::create('enrollment_images', function (Blueprint $table) {
             $table->id();
             $table->string('file_path');
-            $table->foreignIdFor(Enrollments::class, 'enrollment_id');
+            $table->foreignIdFor(Enrollments::class, 'enrollment_id')
+                ->constrained('enrollments')
+                ->cascadeOnDelete();
             $table->timestamps();
         });
     }

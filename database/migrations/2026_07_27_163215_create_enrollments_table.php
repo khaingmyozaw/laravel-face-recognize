@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,8 +17,8 @@ return new class extends Migration
             $table->string('father_name');
             $table->string('mother_name');
             $table->string('nrc')->nullable();
-            $table->string('is_f_alive')->boolean(true);
-            $table->string('is_m_alive')->boolean(true);
+            $table->boolean('is_f_alive')->default(true);
+            $table->boolean('is_m_alive')->default(true);
             $table->string('remark')->nullable();
             $table->string('address');
             $table->timestamps();
