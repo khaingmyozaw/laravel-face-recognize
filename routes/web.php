@@ -19,6 +19,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('enrollments/search', [EnrollmentController::class, 'identify'])
         ->name('enrollments.identify');
 
+    Route::get('enrollments/export', [EnrollmentController::class, 'export'])
+        ->name('enrollments.export');
+    Route::get('enrollments/import/template', [EnrollmentController::class, 'importTemplate'])
+        ->name('enrollments.import.template');
+    Route::post('enrollments/import', [EnrollmentController::class, 'import'])
+        ->name('enrollments.import');
+
     Route::resource('enrollments', EnrollmentController::class);
     Route::delete(
         'enrollments/{enrollment}/images/{image}',

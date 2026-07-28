@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ImportEnrollmentsRequest;
 use App\Http\Requests\SearchEnrollmentRequest;
 use App\Http\Requests\StoreEnrollmentRequest;
 use App\Http\Requests\UpdateEnrollmentRequest;
 use App\Models\Enrollments;
 use App\Services\EnrollmentService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
 class EnrollmentController extends Controller
@@ -19,10 +22,15 @@ class EnrollmentController extends Controller
         private EnrollmentService $service,
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->query('search', ''));
+
         return Inertia::render('enrollments/index', [
-            'enrollments' => $this->service->list(),
+            'enrollments' => $this->service->list(search: $search !== '' ? $search : null),
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 
@@ -156,6 +164,41 @@ class EnrollmentController extends Controller
         return to_route('enrollments.index');
     }
 
+    public function export(): BinaryFileResponse
+    {
+        $timestamp = now()->format('Ymd_His');
+
+        return $this->service->exportToExcel("enrollments_{$timestamp}.xlsx");
+    }
+
+    public function importTemplate(): BinaryFileResponse
+    {
+        return $this->service->downloadImportTemplate();
+    }
+
+    public function import(ImportEnrollmentsRequest $request): RedirectResponse
+    {
+        $file = $request->file('file');
+
+        if (! $file instanceof UploadedFile) {
+            return back()->withErrors([
+                'file' => __('A valid Excel file is required.'),
+            ]);
+        }
+
+        try {
+            $result = $this->service->importFromExcel($file);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()->withErrors([
+                'file' => __('Unable to import enrollments. Please try again.'),
+            ]);
+        }
+
+        return $this->flashImportResult($result);
+    }
+
     public function destroyImage(
         Enrollments $enrollment,
         int $image,
@@ -176,6 +219,33 @@ class EnrollmentController extends Controller
         ]);
 
         return back();
+    }
+
+    /**
+     * @param  array{imported: int, failures: array<int, array<string, mixed>>}  $result
+     */
+    private function flashImportResult(array $result): RedirectResponse
+    {
+        $imported = $result['imported'];
+        $failureCount = count($result['failures']);
+
+        $message = $failureCount === 0
+            ? __(':count enrollment(s) imported.', ['count' => $imported])
+            : __(':count imported, :failed row(s) skipped.', [
+                'count' => $imported,
+                'failed' => $failureCount,
+            ]);
+
+        Inertia::flash('toast', [
+            'type' => $failureCount === 0 ? 'success' : 'warning',
+            'message' => $message,
+        ]);
+
+        if ($failureCount > 0) {
+            return back()->with('importFailures', $result['failures']);
+        }
+
+        return to_route('enrollments.index');
     }
 
     /**

@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Exports\EnrollmentsExport;
+use App\Exports\EnrollmentsImportTemplate;
+use App\Imports\EnrollmentsImport;
 use App\Models\EnrollmentImages;
 use App\Models\Enrollments;
 use App\Repositories\EnrollmentRepository;
@@ -9,7 +12,10 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Excel;
+use Maatwebsite\Excel\Facades\Excel as ExcelFacade;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
 class EnrollmentService
@@ -19,9 +25,38 @@ class EnrollmentService
         private FaceRecognitionClient $faceClient,
     ) {}
 
-    public function list(int $perPage = 12): LengthAwarePaginator
+    public function exportToExcel(string $fileName = 'enrollments.xlsx'): BinaryFileResponse
     {
-        return $this->repository->paginate($perPage);
+        return ExcelFacade::download(new EnrollmentsExport, $fileName, Excel::XLSX);
+    }
+
+    public function downloadImportTemplate(string $fileName = 'enrollments_import_template.xlsx'): BinaryFileResponse
+    {
+        return ExcelFacade::download(new EnrollmentsImportTemplate, $fileName, Excel::XLSX);
+    }
+
+    /**
+     * @return array{imported: int, failures: array<int, array{row: int, attribute: string, errors: list<string>, values: array<string, mixed>}>}
+     *
+     * @throws Throwable
+     */
+    public function importFromExcel(UploadedFile $file): array
+    {
+        $import = new EnrollmentsImport($this->repository);
+
+        DB::transaction(function () use ($import, $file): void {
+            ExcelFacade::import($import, $file);
+        });
+
+        return [
+            'imported' => $import->importedCount(),
+            'failures' => $import->failureReport(),
+        ];
+    }
+
+    public function list(int $perPage = 12, ?string $search = null): LengthAwarePaginator
+    {
+        return $this->repository->paginate($perPage, $search);
     }
 
     public function find(int $id): Enrollments

@@ -1,8 +1,8 @@
 import { Form, Head, Link } from '@inertiajs/react';
 import UserController from '@/actions/App/Http/Controllers/UserController';
 import Heading from '@/components/heading';
-import { UserFormFields } from '@/components/user-form-fields';
 import { Button } from '@/components/ui/button';
+import { UserFormFields } from '@/components/user-form-fields';
 import { create, index } from '@/routes/users';
 import type { UserRoleOption } from '@/types';
 

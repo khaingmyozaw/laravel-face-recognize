@@ -5,16 +5,36 @@ namespace App\Repositories;
 use App\Models\EnrollmentImages;
 use App\Models\Enrollments;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class EnrollmentRepository
 {
-    public function paginate(int $perPage = 12): LengthAwarePaginator
+    public function paginate(int $perPage = 12, ?string $search = null): LengthAwarePaginator
     {
         return Enrollments::query()
             ->with('images')
+            ->when(
+                $search !== null && $search !== '',
+                fn (Builder $query) => $this->applySearch($query, $search),
+            )
             ->latest()
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    private function applySearch(Builder $query, string $search): Builder
+    {
+        $term = '%'.$search.'%';
+
+        return $query->where(function (Builder $query) use ($term): void {
+            $query
+                ->where('name', 'like', $term)
+                ->orWhere('nrc', 'like', $term)
+                ->orWhere('address', 'like', $term)
+                ->orWhere('father_name', 'like', $term)
+                ->orWhere('mother_name', 'like', $term);
+        });
     }
 
     public function findOrFail(int $id): Enrollments

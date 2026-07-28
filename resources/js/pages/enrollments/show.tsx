@@ -4,9 +4,10 @@ import { useState } from 'react';
 import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
 import Heading from '@/components/heading';
 import {
-    ImagePreviewDialog,
-    type PreviewImage,
+    ImagePreviewDialog
+    
 } from '@/components/image-preview-dialog';
+import type {PreviewImage} from '@/components/image-preview-dialog';
 import { Button } from '@/components/ui/button';
 import { index, show } from '@/routes/enrollments';
 import type { Enrollment } from '@/types';

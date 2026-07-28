@@ -1,22 +1,59 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Download, FileSpreadsheet, Plus, Search, Trash2, Upload, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
 import Heading from '@/components/heading';
-import {
-    ImagePreviewDialog,
-    type PreviewImage,
-} from '@/components/image-preview-dialog';
+import { ImagePreviewDialog } from '@/components/image-preview-dialog';
+import type { PreviewImage } from '@/components/image-preview-dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { index as enrollmentsIndex } from '@/routes/enrollments';
 import type { PaginatedEnrollments } from '@/types';
 
 type Props = {
     enrollments: PaginatedEnrollments;
+    filters: {
+        search: string;
+    };
 };
 
-export default function EnrollmentsIndex({ enrollments }: Props) {
+export default function EnrollmentsIndex({ enrollments, filters }: Props) {
     const [preview, setPreview] = useState<PreviewImage | null>(null);
+    const [search, setSearch] = useState<string>(filters.search ?? '');
+    const [isImporting, setIsImporting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    useEffect(() => {
+        const current = filters.search ?? '';
+        const trimmed = search.trim();
+
+        if (trimmed === current) {
+            return;
+        }
+
+        const timer = window.setTimeout(() => {
+            router.get(
+                enrollmentsIndex().url,
+                trimmed === '' ? {} : { search: trimmed },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                },
+            );
+        }, 350);
+
+        return () => window.clearTimeout(timer);
+    }, [search, filters.search]);
+
+    function onSubmitSearch(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+    }
+
+    function clearSearch() {
+        setSearch('');
+    }
 
     function confirmDelete(id: number, name: string) {
         if (!window.confirm(`Delete enrollment for ${name}?`)) {
@@ -24,6 +61,34 @@ export default function EnrollmentsIndex({ enrollments }: Props) {
         }
 
         router.delete(EnrollmentController.destroy.url(id));
+    }
+
+    function triggerImport() {
+        fileInputRef.current?.click();
+    }
+
+    function onFileSelected(event: ChangeEvent<HTMLInputElement>) {
+        const file = event.target.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        setIsImporting(true);
+        router.post(EnrollmentController.import.url(), formData, {
+            forceFormData: true,
+            preserveScroll: true,
+            onFinish: () => {
+                setIsImporting(false);
+
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            },
+        });
     }
 
     return (
@@ -42,6 +107,40 @@ export default function EnrollmentsIndex({ enrollments }: Props) {
                                 Search by face
                             </Link>
                         </Button>
+                        <Button variant="outline" asChild>
+                            <a
+                                href={EnrollmentController.export.url()}
+                                download
+                            >
+                                <Download />
+                                Export
+                            </a>
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <a
+                                href={EnrollmentController.importTemplate.url()}
+                                download
+                            >
+                                <FileSpreadsheet />
+                                Template
+                            </a>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            type="button"
+                            onClick={triggerImport}
+                            disabled={isImporting}
+                        >
+                            <Upload />
+                            {isImporting ? 'Importing…' : 'Import'}
+                        </Button>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".xlsx,.xls,.csv"
+                            className="hidden"
+                            onChange={onFileSelected}
+                        />
                         <Button asChild>
                             <Link href={EnrollmentController.create.url()}>
                                 <Plus />
@@ -51,9 +150,43 @@ export default function EnrollmentsIndex({ enrollments }: Props) {
                     </div>
                 </div>
 
+                <form
+                    onSubmit={onSubmitSearch}
+                    role="search"
+                    className="flex w-full max-w-md items-center gap-2"
+                >
+                    <div className="relative flex-1">
+                        <Search
+                            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                            aria-hidden="true"
+                        />
+                        <Input
+                            type="search"
+                            name="search"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            placeholder="Search by name, NRC, address…"
+                            aria-label="Search enrollments"
+                            className="pl-9 pr-9"
+                        />
+                        {search !== '' && (
+                            <button
+                                type="button"
+                                onClick={clearSearch}
+                                aria-label="Clear search"
+                                className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                            >
+                                <X className="size-4" />
+                            </button>
+                        )}
+                    </div>
+                </form>
+
                 {enrollments.data.length === 0 ? (
                     <div className="rounded-xl border border-dashed p-10 text-center text-muted-foreground">
-                        No enrollments yet. Create the first one to get started.
+                        {filters.search
+                            ? `No enrollments match “${filters.search}”.`
+                            : 'No enrollments yet. Create the first one to get started.'}
                     </div>
                 ) : (
                     <div className="overflow-x-auto rounded-xl border">
