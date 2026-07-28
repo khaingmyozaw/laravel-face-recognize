@@ -23,8 +23,8 @@ class RoleSeeder extends Seeder
         Role::query()->updateOrCreate(
             ['name' => Role::GATE],
             [
-                'label' => 'Gate',
-                'permissions' => Role::defaultGatePermissions(),
+                'label' => 'User',
+                'permissions' => Role::defaultUserPermissions(),
             ],
         );
     }

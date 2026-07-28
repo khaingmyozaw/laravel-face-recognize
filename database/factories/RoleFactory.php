@@ -22,7 +22,7 @@ class RoleFactory extends Factory
         return [
             'name' => $name,
             'label' => ucfirst($name),
-            'permissions' => Role::defaultGatePermissions(),
+            'permissions' => Role::defaultUserPermissions(),
         ];
     }
 
@@ -40,7 +40,7 @@ class RoleFactory extends Factory
         return $this->state(fn (array $attributes): array => [
             'name' => Role::GATE,
             'label' => 'Gate',
-            'permissions' => Role::defaultGatePermissions(),
+            'permissions' => Role::defaultUserPermissions(),
         ]);
     }
 }

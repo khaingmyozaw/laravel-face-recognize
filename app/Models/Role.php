@@ -89,7 +89,7 @@ class Role extends Model
     /**
      * @return list<string>
      */
-    public static function defaultGatePermissions(): array
+    public static function defaultUserPermissions(): array
     {
         return [
             Permission::EnrollmentsView->value,

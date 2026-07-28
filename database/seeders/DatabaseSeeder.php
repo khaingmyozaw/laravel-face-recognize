@@ -23,8 +23,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::factory()->gate()->create([
-            'name' => 'Gate User',
-            'email' => 'gate@example.com',
+            'name' => 'User',
+            'email' => 'user@example.com',
         ]);
     }
 
