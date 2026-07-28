@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'face' => [
+        'url' => env('FACE_API_URL', 'http://localhost:8088'),
+        'key' => env('FACE_API_KEY'),
+        'timeout' => (int) env('FACE_API_TIMEOUT', 15),
+    ],
+
 ];

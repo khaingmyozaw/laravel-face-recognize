@@ -48,18 +48,14 @@ class EnrollmentRepository
     }
 
     /**
-     * @param  list<string>  $paths
+     * @param  list<array<string, mixed>>  $images
      * @return Collection<int, EnrollmentImages>
      */
-    public function attachImages(Enrollments $enrollment, array $paths): Collection
+    public function attachImages(Enrollments $enrollment, array $images): Collection
     {
-        $images = collect($paths)->map(
-            fn (string $path): EnrollmentImages => $enrollment->images()->create([
-                'file_path' => $path,
-            ]),
+        return collect($images)->map(
+            fn (array $image): EnrollmentImages => $enrollment->images()->create($image),
         );
-
-        return $images;
     }
 
     public function findImageOrFail(Enrollments $enrollment, int $imageId): EnrollmentImages

@@ -13,11 +13,30 @@ class EnrollmentImages extends Model
     protected $fillable = [
         'file_path',
         'enrollment_id',
+        'embedding',
+        'embedding_dim',
+        'bbox',
+        'det_score',
+        'face_count',
     ];
 
     protected $appends = [
         'url',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'embedding' => 'array',
+            'embedding_dim' => 'integer',
+            'bbox' => 'array',
+            'det_score' => 'float',
+            'face_count' => 'integer',
+        ];
+    }
 
     public function enrollment(): BelongsTo
     {

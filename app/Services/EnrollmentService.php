@@ -9,12 +9,14 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Throwable;
 
 class EnrollmentService
 {
     public function __construct(
         private EnrollmentRepository $repository,
+        private FaceRecognitionClient $faceClient,
     ) {}
 
     public function list(int $perPage = 12): LengthAwarePaginator
@@ -96,13 +98,35 @@ class EnrollmentService
             return;
         }
 
-        $paths = [];
+        $payloads = array_map(
+            fn (UploadedFile $image): array => $this->buildImagePayload($image, $enrollment),
+            $images,
+        );
 
-        foreach ($images as $image) {
-            $paths[] = $image->store('enrollments/'.$enrollment->id, 'public');
+        $this->repository->attachImages($enrollment, $payloads);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildImagePayload(UploadedFile $image, Enrollments $enrollment): array
+    {
+        $path = $image->store('enrollments/'.$enrollment->id, 'public');
+
+        if (! is_string($path)) {
+            throw new RuntimeException('Failed to store enrollment image.');
         }
 
-        $this->repository->attachImages($enrollment, $paths);
+        $embedding = $this->faceClient->embed(Storage::disk('public')->path($path));
+
+        return [
+            'file_path' => $path,
+            'embedding' => $embedding['embedding'] ?? null,
+            'embedding_dim' => $embedding['embedding_dim'] ?? null,
+            'bbox' => $embedding['bbox'] ?? null,
+            'det_score' => $embedding['det_score'] ?? null,
+            'face_count' => $embedding['face_count'] ?? null,
+        ];
     }
 
     private function deleteImageFile(EnrollmentImages $image): void
