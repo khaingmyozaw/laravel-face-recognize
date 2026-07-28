@@ -18,6 +18,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('enrollments.search');
     Route::post('enrollments/search', [EnrollmentController::class, 'identify'])
         ->name('enrollments.identify');
+    Route::post('enrollments/search/video', [EnrollmentController::class, 'identifyVideo'])
+        ->name('enrollments.identify-video');
 
     Route::get('enrollments/export', [EnrollmentController::class, 'export'])
         ->name('enrollments.export');

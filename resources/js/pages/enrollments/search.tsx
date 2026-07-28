@@ -1,11 +1,16 @@
 import { Form, Head, Link } from '@inertiajs/react';
-import { ScanFace } from 'lucide-react';
+import { ScanFace, Video } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
 import Heading from '@/components/heading';
 import { ImageDropzone } from '@/components/image-dropzone';
 import { Button } from '@/components/ui/button';
+import { VideoDropzone } from '@/components/video-dropzone';
+import { cn } from '@/lib/utils';
 import { index, search } from '@/routes/enrollments';
 import type { Enrollment } from '@/types';
+
+type SearchMode = 'photo' | 'video';
 
 type SearchMatch = {
     similarity: number;
@@ -16,6 +21,8 @@ type SearchMatch = {
 type SearchResult = {
     matches: SearchMatch[];
     face_count: number | null;
+    frames_sampled: number | null;
+    frames_with_face: number | null;
     threshold: number | null;
     candidate_count: number;
     error: string | null;
@@ -26,6 +33,16 @@ type Props = {
 };
 
 export default function EnrollmentsSearch({ result }: Props) {
+    const [mode, setMode] = useState<SearchMode>('photo');
+
+    useEffect(() => {
+        if (result?.frames_sampled != null) {
+            setMode('video');
+        } else if (result?.face_count != null) {
+            setMode('photo');
+        }
+    }, [result]);
+
     return (
         <>
             <Head title="Search by face" />
@@ -34,39 +51,88 @@ export default function EnrollmentsSearch({ result }: Props) {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <Heading
                         title="Search by face"
-                        description="Upload a photo to find matching enrollments."
+                        description="Upload a photo or video to find matching enrollments."
                     />
                     <Button variant="outline" asChild>
                         <Link href={index()}>Back</Link>
                     </Button>
                 </div>
 
-                <Form
-                    {...EnrollmentController.identify.form()}
-                    encType="multipart/form-data"
-                    className="rounded-xl border p-6"
-                    options={{ preserveScroll: true }}
-                >
-                    {({ processing, errors }) => (
-                        <div className="grid gap-6">
-                            <ImageDropzone
-                                name="image"
-                                label="Probe photo"
-                                multiple={false}
-                                errors={errors}
-                            />
+                <div className="flex gap-2">
+                    <Button
+                        type="button"
+                        variant={mode === 'photo' ? 'default' : 'outline'}
+                        onClick={() => setMode('photo')}
+                    >
+                        <ScanFace />
+                        Photo
+                    </Button>
+                    <Button
+                        type="button"
+                        variant={mode === 'video' ? 'default' : 'outline'}
+                        onClick={() => setMode('video')}
+                    >
+                        <Video />
+                        Video
+                    </Button>
+                </div>
 
-                            <div className="flex justify-end">
-                                <Button type="submit" disabled={processing}>
-                                    <ScanFace />
-                                    {processing
-                                        ? 'Searching…'
-                                        : 'Search enrollments'}
-                                </Button>
+                <div className={cn(mode !== 'photo' && 'hidden')}>
+                    <Form
+                        {...EnrollmentController.identify.form()}
+                        encType="multipart/form-data"
+                        className="rounded-xl border p-6"
+                        options={{ preserveScroll: true }}
+                    >
+                        {({ processing, errors }) => (
+                            <div className="grid gap-6">
+                                <ImageDropzone
+                                    name="image"
+                                    label="Probe photo"
+                                    multiple={false}
+                                    errors={errors}
+                                />
+
+                                <div className="flex justify-end">
+                                    <Button type="submit" disabled={processing}>
+                                        <ScanFace />
+                                        {processing
+                                            ? 'Searching…'
+                                            : 'Search enrollments'}
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </Form>
+                        )}
+                    </Form>
+                </div>
+
+                <div className={cn(mode !== 'video' && 'hidden')}>
+                    <Form
+                        {...EnrollmentController.identifyVideo.form()}
+                        encType="multipart/form-data"
+                        className="rounded-xl border p-6"
+                        options={{ preserveScroll: true }}
+                    >
+                        {({ processing, errors }) => (
+                            <div className="grid gap-6">
+                                <VideoDropzone
+                                    name="video"
+                                    label="Probe video"
+                                    errors={errors}
+                                />
+
+                                <div className="flex justify-end">
+                                    <Button type="submit" disabled={processing}>
+                                        <Video />
+                                        {processing
+                                            ? 'Searching…'
+                                            : 'Search enrollments'}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </Form>
+                </div>
 
                 {result && <SearchResults result={result} />}
             </div>
@@ -87,9 +153,7 @@ function SearchResults({ result }: { result: SearchResult }) {
         return (
             <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
                 No matching enrollments found
-                {result.face_count !== null
-                    ? ` (faces detected: ${result.face_count}).`
-                    : '.'}
+                {formatDetectionHint(result)}.
             </div>
         );
     }
@@ -105,6 +169,9 @@ function SearchResults({ result }: { result: SearchResult }) {
                     {result.candidate_count === 1 ? '' : 's'}
                     {result.threshold !== null
                         ? ` · threshold ${result.threshold.toFixed(2)}`
+                        : ''}
+                    {result.frames_sampled !== null
+                        ? ` · frames ${result.frames_with_face ?? 0}/${result.frames_sampled}`
                         : ''}
                 </p>
             </div>
@@ -195,6 +262,18 @@ function SearchResults({ result }: { result: SearchResult }) {
             </div>
         </div>
     );
+}
+
+function formatDetectionHint(result: SearchResult): string {
+    if (result.frames_sampled !== null) {
+        return ` (faces in ${result.frames_with_face ?? 0} of ${result.frames_sampled} frames)`;
+    }
+
+    if (result.face_count !== null) {
+        return ` (faces detected: ${result.face_count})`;
+    }
+
+    return '';
 }
 
 EnrollmentsSearch.layout = {

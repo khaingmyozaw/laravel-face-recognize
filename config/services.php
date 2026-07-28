@@ -39,10 +39,18 @@ return [
         'url' => env('FACE_API_URL', 'http://localhost:8088'),
         'key' => env('FACE_API_KEY'),
         'timeout' => (int) env('FACE_API_TIMEOUT', 15),
+        'video_timeout' => (int) env('FACE_API_VIDEO_TIMEOUT', 120),
         'identify_top_k' => (int) env('FACE_IDENTIFY_TOP_K', 5),
         'identify_threshold' => env('FACE_IDENTIFY_THRESHOLD') !== null
             ? (float) env('FACE_IDENTIFY_THRESHOLD')
             : null,
+        'video_sample_fps' => env('FACE_VIDEO_SAMPLE_FPS') !== null
+            ? (float) env('FACE_VIDEO_SAMPLE_FPS')
+            : null,
+        'video_max_frames' => env('FACE_VIDEO_MAX_FRAMES') !== null
+            ? (int) env('FACE_VIDEO_MAX_FRAMES')
+            : null,
+        'video_max_kb' => (int) env('FACE_VIDEO_MAX_KB', 51200),
     ],
 
 ];

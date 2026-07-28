@@ -52,7 +52,12 @@ If the service is down, the file is unreadable, or no face is found, the image i
 
 ### Search by face
 
-Upload a probe photo on **Search by face** (`/enrollments/search`). The app loads stored embeddings and calls `POST /v1/identify` on the face service, then returns ranked enrollment matches with similarity scores.
+Upload a probe photo or video on **Search by face** (`/enrollments/search`).
+
+- **Photo** — calls `POST /v1/identify` on the face service
+- **Video** — calls `POST /v1/video/identify` (samples frames, longer timeout)
+
+Both paths load stored embeddings and return ranked enrollment matches with similarity scores.
 
 ### Environment
 
@@ -60,11 +65,15 @@ Upload a probe photo on **Search by face** (`/enrollments/search`). The app load
 FACE_API_URL=http://localhost:8088
 FACE_API_KEY=
 FACE_API_TIMEOUT=15
+FACE_API_VIDEO_TIMEOUT=120
 FACE_IDENTIFY_TOP_K=5
 FACE_IDENTIFY_THRESHOLD=
+FACE_VIDEO_SAMPLE_FPS=
+FACE_VIDEO_MAX_FRAMES=
+FACE_VIDEO_MAX_KB=51200
 ```
 
-Optional `FACE_API_KEY` is sent as `X-API-Key` when set. `FACE_IDENTIFY_THRESHOLD` is omitted from identify requests when empty (service default applies).
+Optional `FACE_API_KEY` is sent as `X-API-Key` when set. `FACE_IDENTIFY_THRESHOLD`, `FACE_VIDEO_SAMPLE_FPS`, and `FACE_VIDEO_MAX_FRAMES` are omitted from requests when empty (service defaults apply). Ensure PHP `upload_max_filesize` / `post_max_size` allow videos up to `FACE_VIDEO_MAX_KB` (default 50MB).
 
 ### Health check
 
@@ -89,7 +98,7 @@ API docs: `http://localhost:8088/docs`
 ## Main features
 
 - **Enrollments** — CRUD for people and their photos (auth required)
-- **Search by face** — 1:N identify against stored embeddings
+- **Search by face** — 1:N identify from photo or video against stored embeddings
 - **Face embeddings** — automatic on image upload via `FaceRecognitionClient`
 - **Users** — admin-only user management
 - **Settings** — profile, password/security, appearance
@@ -112,8 +121,8 @@ npm run format:check
 ## Project layout
 
 ```
-app/Services/FaceRecognitionClient.php   # HTTP client for /v1/embed and /v1/identify
-app/Services/EnrollmentService.php       # Enrollment, embed on upload, search by image
+app/Services/FaceRecognitionClient.php   # HTTP client for /v1/embed, /v1/identify, /v1/video/identify
+app/Services/EnrollmentService.php       # Enrollment, embed on upload, search by image/video
 app/Repositories/EnrollmentRepository.php
 config/services.php                      # face.* config from FACE_API_*
 database/migrations/                     # includes embedding columns

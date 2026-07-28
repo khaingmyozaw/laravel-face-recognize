@@ -134,6 +134,8 @@ class EnrollmentService
      *         enrollment: Enrollments,
      *     }>,
      *     face_count: int|null,
+     *     frames_sampled: int|null,
+     *     frames_with_face: int|null,
      *     threshold: float|null,
      *     candidate_count: int,
      *     error: string|null,
@@ -174,6 +176,68 @@ class EnrollmentService
         return [
             'matches' => $this->resolveIdentifyMatches($result['matches']),
             'face_count' => $result['face_count'],
+            'frames_sampled' => null,
+            'frames_with_face' => null,
+            'threshold' => $result['threshold'],
+            'candidate_count' => count($candidates),
+            'error' => null,
+        ];
+    }
+
+    /**
+     * Search enrollments by face video via the face video identify API.
+     *
+     * @return array{
+     *     matches: list<array{
+     *         similarity: float,
+     *         is_match: bool,
+     *         enrollment: Enrollments,
+     *     }>,
+     *     face_count: int|null,
+     *     frames_sampled: int|null,
+     *     frames_with_face: int|null,
+     *     threshold: float|null,
+     *     candidate_count: int,
+     *     error: string|null,
+     * }
+     */
+    public function searchByVideo(UploadedFile $video): array
+    {
+        $candidates = $this->buildIdentifyCandidates();
+
+        if ($candidates === []) {
+            return $this->emptySearchResult(
+                candidateCount: 0,
+                error: __('No enrolled faces with embeddings are available to search.'),
+            );
+        }
+
+        $contents = @file_get_contents($video->getRealPath());
+
+        if ($contents === false) {
+            return $this->emptySearchResult(
+                candidateCount: count($candidates),
+                error: __('Unable to read the uploaded video.'),
+            );
+        }
+
+        $result = $this->faceClient->identifyFromVideo(
+            base64_encode($contents),
+            $candidates,
+        );
+
+        if ($result === null) {
+            return $this->emptySearchResult(
+                candidateCount: count($candidates),
+                error: __('Video search failed. Check that the face service is running and the video contains a face.'),
+            );
+        }
+
+        return [
+            'matches' => $this->resolveIdentifyMatches($result['matches']),
+            'face_count' => null,
+            'frames_sampled' => $result['frames_sampled'],
+            'frames_with_face' => $result['frames_with_face'],
             'threshold' => $result['threshold'],
             'candidate_count' => count($candidates),
             'error' => null,
@@ -255,6 +319,8 @@ class EnrollmentService
      * @return array{
      *     matches: list<array{similarity: float, is_match: bool, enrollment: Enrollments}>,
      *     face_count: int|null,
+     *     frames_sampled: int|null,
+     *     frames_with_face: int|null,
      *     threshold: float|null,
      *     candidate_count: int,
      *     error: string|null,
@@ -265,6 +331,8 @@ class EnrollmentService
         return [
             'matches' => [],
             'face_count' => null,
+            'frames_sampled' => null,
+            'frames_with_face' => null,
             'threshold' => null,
             'candidate_count' => $candidateCount,
             'error' => $error,

@@ -272,4 +272,41 @@ class EnrollmentTest extends TestCase
             ->where('result.matches', [])
             ->whereNot('result.error', null));
     }
+
+    public function test_video_search_requires_a_video(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('enrollments.identify-video'))
+            ->assertSessionHasErrors('video');
+    }
+
+    public function test_video_search_rejects_invalid_file_types(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('enrollments.identify-video'), [
+                'video' => UploadedFile::fake()->create('probe.txt', 100, 'text/plain'),
+            ])
+            ->assertSessionHasErrors('video');
+    }
+
+    public function test_video_search_reports_when_no_embeddings_exist(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('enrollments.identify-video'), [
+            'video' => UploadedFile::fake()->create('probe.mp4', 100, 'video/mp4'),
+        ]);
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('enrollments/search')
+            ->where('result.candidate_count', 0)
+            ->where('result.matches', [])
+            ->where('result.frames_sampled', null)
+            ->whereNot('result.error', null));
+    }
 }

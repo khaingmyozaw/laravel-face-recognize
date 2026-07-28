@@ -127,10 +127,84 @@ class FaceRecognitionClient
         return $this->normalizeIdentify($response->json());
     }
 
-    private function request(): PendingRequest
+    /**
+     * Identify a probe video against stored candidate embeddings (1:N).
+     *
+     * @param  list<array{user_id: string, embedding: list<float>}>  $candidates
+     * @return array{
+     *     frames_sampled: int,
+     *     frames_with_face: int,
+     *     threshold: float,
+     *     matches: list<array{user_id: string, similarity: float, is_match: bool}>,
+     *     best_match: array{user_id: string, similarity: float, is_match: bool}|null,
+     * }|null
+     */
+    public function identifyFromVideo(
+        string $videoBase64,
+        array $candidates,
+        ?int $topK = null,
+        ?float $threshold = null,
+        ?float $sampleFps = null,
+        ?int $maxFrames = null,
+    ): ?array {
+        if ($videoBase64 === '' || $candidates === []) {
+            return null;
+        }
+
+        $payload = [
+            'video_base64' => $videoBase64,
+            'candidates' => $candidates,
+            'top_k' => $topK ?? (int) config('services.face.identify_top_k', 5),
+        ];
+
+        $configuredThreshold = $threshold ?? config('services.face.identify_threshold');
+
+        if ($configuredThreshold !== null) {
+            $payload['threshold'] = (float) $configuredThreshold;
+        }
+
+        $configuredSampleFps = $sampleFps ?? config('services.face.video_sample_fps');
+
+        if ($configuredSampleFps !== null) {
+            $payload['sample_fps'] = (float) $configuredSampleFps;
+        }
+
+        $configuredMaxFrames = $maxFrames ?? config('services.face.video_max_frames');
+
+        if ($configuredMaxFrames !== null) {
+            $payload['max_frames'] = (int) $configuredMaxFrames;
+        }
+
+        try {
+            $response = $this->request(
+                (int) config('services.face.video_timeout', 120),
+            )->post('/v1/video/identify', $payload);
+        } catch (Throwable $exception) {
+            Log::warning('Face video identify request failed.', [
+                'error' => $exception->getMessage(),
+                'candidate_count' => count($candidates),
+            ]);
+
+            return null;
+        }
+
+        if (! $response->successful()) {
+            Log::warning('Face video identify response was unsuccessful.', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'candidate_count' => count($candidates),
+            ]);
+
+            return null;
+        }
+
+        return $this->normalizeVideoIdentify($response->json());
+    }
+
+    private function request(?int $timeout = null): PendingRequest
     {
         $request = Http::baseUrl((string) config('services.face.url'))
-            ->timeout((int) config('services.face.timeout', 15))
+            ->timeout($timeout ?? (int) config('services.face.timeout', 15))
             ->acceptJson();
 
         $apiKey = config('services.face.key');
@@ -207,6 +281,58 @@ class FaceRecognitionClient
 
         return [
             'face_count' => (int) $payload['face_count'],
+            'threshold' => (float) ($payload['threshold'] ?? 0.0),
+            'matches' => $matches,
+            'best_match' => $bestMatch,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     frames_sampled: int,
+     *     frames_with_face: int,
+     *     threshold: float,
+     *     matches: list<array{user_id: string, similarity: float, is_match: bool}>,
+     *     best_match: array{user_id: string, similarity: float, is_match: bool}|null,
+     * }|null
+     */
+    private function normalizeVideoIdentify(mixed $payload): ?array
+    {
+        if (
+            ! is_array($payload)
+            || ! isset($payload['matches'], $payload['frames_sampled'], $payload['frames_with_face'])
+        ) {
+            return null;
+        }
+
+        $matches = [];
+
+        foreach ((array) $payload['matches'] as $match) {
+            if (! is_array($match) || ! isset($match['user_id'], $match['similarity'])) {
+                continue;
+            }
+
+            $matches[] = [
+                'user_id' => (string) $match['user_id'],
+                'similarity' => (float) $match['similarity'],
+                'is_match' => (bool) ($match['is_match'] ?? false),
+            ];
+        }
+
+        $best = $payload['best_match'] ?? null;
+        $bestMatch = null;
+
+        if (is_array($best) && isset($best['user_id'], $best['similarity'])) {
+            $bestMatch = [
+                'user_id' => (string) $best['user_id'],
+                'similarity' => (float) $best['similarity'],
+                'is_match' => (bool) ($best['is_match'] ?? false),
+            ];
+        }
+
+        return [
+            'frames_sampled' => (int) $payload['frames_sampled'],
+            'frames_with_face' => (int) $payload['frames_with_face'],
             'threshold' => (float) ($payload['threshold'] ?? 0.0),
             'matches' => $matches,
             'best_match' => $bestMatch,

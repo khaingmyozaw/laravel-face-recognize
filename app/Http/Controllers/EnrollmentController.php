@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ImportEnrollmentsRequest;
 use App\Http\Requests\SearchEnrollmentRequest;
+use App\Http\Requests\SearchEnrollmentVideoRequest;
 use App\Http\Requests\StoreEnrollmentRequest;
 use App\Http\Requests\UpdateEnrollmentRequest;
 use App\Models\Enrollments;
@@ -47,13 +48,7 @@ class EnrollmentController extends Controller
 
         if (! $image instanceof UploadedFile) {
             return Inertia::render('enrollments/search', [
-                'result' => [
-                    'matches' => [],
-                    'face_count' => null,
-                    'threshold' => null,
-                    'candidate_count' => 0,
-                    'error' => __('A valid image is required.'),
-                ],
+                'result' => $this->invalidSearchResult(__('A valid image is required.')),
             ]);
         }
 
@@ -62,13 +57,34 @@ class EnrollmentController extends Controller
         } catch (Throwable $exception) {
             report($exception);
 
-            $result = [
-                'matches' => [],
-                'face_count' => null,
-                'threshold' => null,
-                'candidate_count' => 0,
-                'error' => __('Unable to search by image. Please try again.'),
-            ];
+            $result = $this->invalidSearchResult(
+                __('Unable to search by image. Please try again.'),
+            );
+        }
+
+        return Inertia::render('enrollments/search', [
+            'result' => $result,
+        ]);
+    }
+
+    public function identifyVideo(SearchEnrollmentVideoRequest $request): Response
+    {
+        $video = $request->file('video');
+
+        if (! $video instanceof UploadedFile) {
+            return Inertia::render('enrollments/search', [
+                'result' => $this->invalidSearchResult(__('A valid video is required.')),
+            ]);
+        }
+
+        try {
+            $result = $this->service->searchByVideo($video);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $result = $this->invalidSearchResult(
+                __('Unable to search by video. Please try again.'),
+            );
         }
 
         return Inertia::render('enrollments/search', [
@@ -219,6 +235,30 @@ class EnrollmentController extends Controller
         ]);
 
         return back();
+    }
+
+    /**
+     * @return array{
+     *     matches: list<mixed>,
+     *     face_count: null,
+     *     frames_sampled: null,
+     *     frames_with_face: null,
+     *     threshold: null,
+     *     candidate_count: int,
+     *     error: string,
+     * }
+     */
+    private function invalidSearchResult(string $error): array
+    {
+        return [
+            'matches' => [],
+            'face_count' => null,
+            'frames_sampled' => null,
+            'frames_with_face' => null,
+            'threshold' => null,
+            'candidate_count' => 0,
+            'error' => $error,
+        ];
     }
 
     /**
