@@ -1,8 +1,26 @@
+export type Permission =
+    | 'enrollments.view'
+    | 'enrollments.create'
+    | 'enrollments.update'
+    | 'enrollments.delete'
+    | 'enrollments.search'
+    | 'enrollments.import'
+    | 'enrollments.export'
+    | 'users.view'
+    | 'users.create'
+    | 'users.update'
+    | 'users.delete'
+    | 'roles.view'
+    | 'roles.create'
+    | 'roles.update'
+    | 'roles.delete';
+
 export type User = {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'gate';
+    role: string;
+    role_id?: number;
     avatar?: string;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;
@@ -12,7 +30,8 @@ export type User = {
 };
 
 export type Auth = {
-    user: User;
+    user: User | null;
+    permissions: Permission[];
 };
 
 /* @chisel-passkeys */

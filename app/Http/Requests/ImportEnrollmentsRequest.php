@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\Permission;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ImportEnrollmentsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return $this->user()?->can(Permission::EnrollmentsImport->value) === true;
     }
 
     /**

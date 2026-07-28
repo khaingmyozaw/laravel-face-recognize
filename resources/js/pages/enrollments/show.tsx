@@ -9,6 +9,7 @@ import {
 } from '@/components/image-preview-dialog';
 import type {PreviewImage} from '@/components/image-preview-dialog';
 import { Button } from '@/components/ui/button';
+import { useCan } from '@/hooks/use-can';
 import { index, show } from '@/routes/enrollments';
 import type { Enrollment } from '@/types';
 
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export default function EnrollmentsShow({ enrollment }: Props) {
+    const can = useCan();
     const [preview, setPreview] = useState<PreviewImage | null>(null);
 
     function confirmDelete() {
@@ -54,20 +56,27 @@ export default function EnrollmentsShow({ enrollment }: Props) {
                         <Button variant="outline" asChild>
                             <Link href={index()}>Back</Link>
                         </Button>
-                        <Button variant="outline" asChild>
-                            <Link
-                                href={EnrollmentController.edit.url(
-                                    enrollment.id,
-                                )}
+                        {can('enrollments.update') && (
+                            <Button variant="outline" asChild>
+                                <Link
+                                    href={EnrollmentController.edit.url(
+                                        enrollment.id,
+                                    )}
+                                >
+                                    <Pencil />
+                                    Edit
+                                </Link>
+                            </Button>
+                        )}
+                        {can('enrollments.delete') && (
+                            <Button
+                                variant="destructive"
+                                onClick={confirmDelete}
                             >
-                                <Pencil />
-                                Edit
-                            </Link>
-                        </Button>
-                        <Button variant="destructive" onClick={confirmDelete}>
-                            <Trash2 />
-                            Delete
-                        </Button>
+                                <Trash2 />
+                                Delete
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -124,18 +133,20 @@ export default function EnrollmentsShow({ enrollment }: Props) {
                                             className="aspect-square w-full cursor-zoom-in object-cover transition-opacity hover:opacity-80"
                                         />
                                     </button>
-                                    <Button
-                                        type="button"
-                                        variant="destructive"
-                                        size="icon"
-                                        className="absolute top-2 right-2 size-8"
-                                        onClick={() =>
-                                            confirmDeleteImage(image.id)
-                                        }
-                                        aria-label="Delete image"
-                                    >
-                                        <Trash2 />
-                                    </Button>
+                                    {can('enrollments.update') && (
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="icon"
+                                            className="absolute top-2 right-2 size-8"
+                                            onClick={() =>
+                                                confirmDeleteImage(image.id)
+                                            }
+                                            aria-label="Delete image"
+                                        >
+                                            <Trash2 />
+                                        </Button>
+                                    )}
                                 </div>
                             ))}
                         </div>

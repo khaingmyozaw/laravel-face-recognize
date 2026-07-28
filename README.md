@@ -6,7 +6,7 @@ Laravel + React (Inertia) app for person enrollment with face recognition. Enrol
 
 - **Backend:** Laravel 13, PHP 8.3+
 - **Frontend:** React, Inertia.js, Vite, TypeScript
-- **Auth:** Laravel Fortify
+- **Auth:** Laravel Fortify (web) + Bearer personal access tokens (mobile API)
 - **Face API:** InsightFace + ONNX Runtime service (`FACE_API_URL`, default `http://localhost:8088`)
 
 ## Requirements
@@ -97,11 +97,56 @@ API docs: `http://localhost:8088/docs`
 
 ## Main features
 
-- **Enrollments** — CRUD for people and their photos (auth required)
+- **Enrollments** — CRUD for people and their photos (permission-gated)
 - **Search by face** — 1:N identify from photo or video against stored embeddings
 - **Face embeddings** — automatic on image upload via `FaceRecognitionClient`
-- **Users** — admin-only user management
+- **Users** — user management (`users.*` permissions; admin role)
+- **Roles** — CRUD for roles and permissions (`roles.*`; admin role is protected)
 - **Settings** — profile, password/security, appearance
+- **Mobile API** — JSON Bearer-token API under `/api` (no Excel import/export)
+
+## Mobile API
+
+Base URL: `/api`. Authenticate with `Authorization: Bearer {token}`.
+
+| Method | Endpoint | Permission | Notes |
+| --- | --- | --- | --- |
+| POST | `/api/login` | — | Body: `email`, `password`, optional `device_name` |
+| GET | `/api/user` | auth | Current user + permissions |
+| POST | `/api/logout` | auth | Revokes the current token |
+| GET | `/api/enrollments` | `enrollments.view` | Query: `search`, `per_page` |
+| POST | `/api/enrollments` | `enrollments.create` | Multipart; optional `images[]` |
+| GET | `/api/enrollments/{id}` | `enrollments.view` | Includes images |
+| PUT | `/api/enrollments/{id}` | `enrollments.update` | Multipart; optional new `images[]` |
+| DELETE | `/api/enrollments/{id}` | `enrollments.delete` | |
+| DELETE | `/api/enrollments/{id}/images/{image}` | `enrollments.update` | |
+| POST | `/api/enrollments/identify` | `enrollments.search` | Multipart `image` |
+| POST | `/api/enrollments/identify-video` | `enrollments.search` | Multipart `video` |
+| GET/POST/PUT/DELETE | `/api/users…` | `users.*` | Admin user management |
+| GET | `/api/users/roles` | `users.view` | Role options |
+
+Excel import/export stays web-only.
+
+Example login:
+
+```bash
+curl -X POST http://localhost:8000/api/login \
+  -H 'Accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"gate@example.com","password":"password","device_name":"android"}'
+```
+
+## Authorization
+
+Access is **permission-based**. Roles are stored in the database and managed under **Roles** (admin). The built-in `admin` role cannot be edited or deleted.
+
+| Permission | Admin (default) | Gate (default) |
+| --- | --- | --- |
+| `enrollments.*` | ✓ | ✓ |
+| `users.*` | ✓ | |
+| `roles.*` | ✓ | |
+
+Checks use Laravel Gates on routes and form requests. Shared Inertia prop `auth.permissions` drives the sidebar and action buttons via `useCan()`. API routes use the same Gates with the `api` Bearer-token guard.
 
 ## Useful commands
 
@@ -123,8 +168,11 @@ npm run format:check
 ```
 app/Services/FaceRecognitionClient.php   # HTTP client for /v1/embed, /v1/identify, /v1/video/identify
 app/Services/EnrollmentService.php       # Enrollment, embed on upload, search by image/video
+app/Http/Controllers/Api/                # Mobile JSON API controllers
+app/Models/Concerns/HasApiTokens.php     # Personal access tokens for mobile auth
 app/Repositories/EnrollmentRepository.php
 config/services.php                      # face.* config from FACE_API_*
-database/migrations/                     # includes embedding columns
+database/migrations/                     # includes embedding + personal_access_tokens
 resources/js/pages/                      # Inertia React pages (includes enrollments/search)
+routes/api.php                           # Mobile API routes
 ```

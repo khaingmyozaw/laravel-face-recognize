@@ -3,6 +3,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import UserController from '@/actions/App/Http/Controllers/UserController';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
+import { useCan } from '@/hooks/use-can';
 import { index as usersIndex } from '@/routes/users';
 import type { Auth, PaginatedUsers } from '@/types';
 
@@ -16,6 +17,7 @@ type PageProps = {
 
 export default function UsersIndex({ users }: Props) {
     const { auth } = usePage<PageProps>().props;
+    const can = useCan();
 
     function confirmDelete(id: number, name: string) {
         if (!window.confirm(`Delete user ${name}?`)) {
@@ -35,12 +37,14 @@ export default function UsersIndex({ users }: Props) {
                         title="Users"
                         description="Manage admin and gate accounts."
                     />
-                    <Button asChild>
-                        <Link href={UserController.create.url()}>
-                            <Plus />
-                            New user
-                        </Link>
-                    </Button>
+                    {can('users.create') && (
+                        <Button asChild>
+                            <Link href={UserController.create.url()}>
+                                <Plus />
+                                New user
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 {users.data.length === 0 ? (
@@ -90,35 +94,40 @@ export default function UsersIndex({ users }: Props) {
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex justify-end gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
-                                                >
-                                                    <Link
-                                                        href={UserController.edit.url(
-                                                            user.id,
-                                                        )}
+                                                {can('users.update') && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        asChild
                                                     >
-                                                        Edit
-                                                    </Link>
-                                                </Button>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    disabled={
-                                                        user.id === auth.user.id
-                                                    }
-                                                    onClick={() =>
-                                                        confirmDelete(
-                                                            user.id,
-                                                            user.name,
-                                                        )
-                                                    }
-                                                >
-                                                    <Trash2 />
-                                                    Delete
-                                                </Button>
+                                                        <Link
+                                                            href={UserController.edit.url(
+                                                                user.id,
+                                                            )}
+                                                        >
+                                                            Edit
+                                                        </Link>
+                                                    </Button>
+                                                )}
+                                                {can('users.delete') && (
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        disabled={
+                                                            user.id ===
+                                                            auth.user?.id
+                                                        }
+                                                        onClick={() =>
+                                                            confirmDelete(
+                                                                user.id,
+                                                                user.name,
+                                                            )
+                                                        }
+                                                    >
+                                                        <Trash2 />
+                                                        Delete
+                                                    </Button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

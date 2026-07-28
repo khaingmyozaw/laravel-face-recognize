@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(RoleSeeder::class);
+
         User::factory()->admin()->create([
             'name' => 'Test User',
             'email' => 'test1@example.com',
@@ -25,4 +27,5 @@ class DatabaseSeeder extends Seeder
             'email' => 'gate@example.com',
         ]);
     }
+
 }

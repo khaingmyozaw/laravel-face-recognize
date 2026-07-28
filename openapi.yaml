@@ -1,0 +1,507 @@
+openapi: 3.0.3
+info:
+  title: FaceRec Mobile API
+  description: |
+    JSON API for the FaceRec mobile application.
+    Authenticate with `POST /api/login`, then send `Authorization: Bearer {token}`.
+    Excel import/export is not included.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api
+    description: Local development
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Enrollments
+  - name: Users
+paths:
+  /login:
+    post:
+      tags: [Auth]
+      summary: Login and receive a Bearer token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: gate@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password
+                device_name:
+                  type: string
+                  example: android
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  token_type:
+                    type: string
+                    example: Bearer
+                  user:
+                    $ref: '#/components/schemas/User'
+        '422':
+          description: Invalid credentials
+  /user:
+    get:
+      tags: [Auth]
+      summary: Current authenticated user
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthenticated
+  /logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current access token
+      responses:
+        '200':
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /enrollments:
+    get:
+      tags: [Enrollments]
+      summary: List enrollments
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 12
+      responses:
+        '200':
+          description: Paginated enrollments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentCollection'
+        '403':
+          description: Forbidden
+    post:
+      tags: [Enrollments]
+      summary: Create enrollment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EnrollmentWrite'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Enrollment'
+  /enrollments/{enrollment}:
+    parameters:
+      - $ref: '#/components/parameters/EnrollmentId'
+    get:
+      tags: [Enrollments]
+      summary: Show enrollment
+      responses:
+        '200':
+          description: Enrollment detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Enrollment'
+    put:
+      tags: [Enrollments]
+      summary: Update enrollment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EnrollmentWrite'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Enrollment'
+    delete:
+      tags: [Enrollments]
+      summary: Delete enrollment
+      responses:
+        '200':
+          description: Deleted
+  /enrollments/{enrollment}/images/{image}:
+    delete:
+      tags: [Enrollments]
+      summary: Delete enrollment image
+      parameters:
+        - $ref: '#/components/parameters/EnrollmentId'
+        - name: image
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Image deleted
+  /enrollments/identify:
+    post:
+      tags: [Enrollments]
+      summary: Identify by face photo
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Identify result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentifyResult'
+  /enrollments/identify-video:
+    post:
+      tags: [Enrollments]
+      summary: Identify by face video
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [video]
+              properties:
+                video:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Identify result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentifyResult'
+  /users:
+    get:
+      tags: [Users]
+      summary: List users
+      parameters:
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 12
+      responses:
+        '200':
+          description: Paginated users
+    post:
+      tags: [Users]
+      summary: Create user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, password_confirmation, role]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                password_confirmation:
+                  type: string
+                  format: password
+                role:
+                  type: string
+                  enum: [admin, gate]
+      responses:
+        '201':
+          description: Created
+  /users/roles:
+    get:
+      tags: [Users]
+      summary: List role options
+      responses:
+        '200':
+          description: Roles
+  /users/{user}:
+    parameters:
+      - name: user
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Users]
+      summary: Show user
+      responses:
+        '200':
+          description: User detail
+    put:
+      tags: [Users]
+      summary: Update user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, role]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                  nullable: true
+                password_confirmation:
+                  type: string
+                  format: password
+                  nullable: true
+                role:
+                  type: string
+                  enum: [admin, gate]
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [Users]
+      summary: Delete user
+      responses:
+        '200':
+          description: Deleted
+        '422':
+          description: Cannot delete own account
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+  parameters:
+    EnrollmentId:
+      name: enrollment
+      in: path
+      required: true
+      schema:
+        type: integer
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, gate]
+        role_label:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        email_verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    EnrollmentImage:
+      type: object
+      properties:
+        id:
+          type: integer
+        enrollment_id:
+          type: integer
+        url:
+          type: string
+        embedding_dim:
+          type: integer
+          nullable: true
+        bbox:
+          type: object
+          nullable: true
+        det_score:
+          type: number
+          nullable: true
+        face_count:
+          type: integer
+          nullable: true
+        has_embedding:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Enrollment:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        father_name:
+          type: string
+        mother_name:
+          type: string
+        nrc:
+          type: string
+          nullable: true
+        is_f_alive:
+          type: boolean
+        is_m_alive:
+          type: boolean
+        remark:
+          type: string
+          nullable: true
+        address:
+          type: string
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnrollmentImage'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    EnrollmentWrite:
+      type: object
+      required: [name, father_name, mother_name, is_f_alive, is_m_alive, address]
+      properties:
+        name:
+          type: string
+        father_name:
+          type: string
+        mother_name:
+          type: string
+        nrc:
+          type: string
+          nullable: true
+        is_f_alive:
+          type: boolean
+        is_m_alive:
+          type: boolean
+        remark:
+          type: string
+          nullable: true
+        address:
+          type: string
+        images:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+            format: binary
+    EnrollmentCollection:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Enrollment'
+        links:
+          type: object
+        meta:
+          type: object
+    IdentifyResult:
+      type: object
+      properties:
+        matches:
+          type: array
+          items:
+            type: object
+            properties:
+              similarity:
+                type: number
+              is_match:
+                type: boolean
+              enrollment:
+                $ref: '#/components/schemas/Enrollment'
+        face_count:
+          type: integer
+          nullable: true
+        frames_sampled:
+          type: integer
+          nullable: true
+        frames_with_face:
+          type: integer
+          nullable: true
+        threshold:
+          type: number
+          nullable: true
+        candidate_count:
+          type: integer
+        error:
+          type: string
+          nullable: true

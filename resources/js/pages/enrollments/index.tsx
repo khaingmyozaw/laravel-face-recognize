@@ -8,6 +8,7 @@ import { ImagePreviewDialog } from '@/components/image-preview-dialog';
 import type { PreviewImage } from '@/components/image-preview-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useCan } from '@/hooks/use-can';
 import { index as enrollmentsIndex } from '@/routes/enrollments';
 import type { PaginatedEnrollments } from '@/types';
 
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export default function EnrollmentsIndex({ enrollments, filters }: Props) {
+    const can = useCan();
     const [preview, setPreview] = useState<PreviewImage | null>(null);
     const [search, setSearch] = useState<string>(filters.search ?? '');
     const [isImporting, setIsImporting] = useState(false);
@@ -102,51 +104,61 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
                         description="Manage enrolled people and their face images."
                     />
                     <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" asChild>
-                            <Link href={EnrollmentController.search.url()}>
-                                Search by face
-                            </Link>
-                        </Button>
-                        <Button variant="outline" asChild>
-                            <a
-                                href={EnrollmentController.export.url()}
-                                download
-                            >
-                                <Download />
-                                Export
-                            </a>
-                        </Button>
-                        <Button variant="outline" asChild>
-                            <a
-                                href={EnrollmentController.importTemplate.url()}
-                                download
-                            >
-                                <FileSpreadsheet />
-                                Template
-                            </a>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            type="button"
-                            onClick={triggerImport}
-                            disabled={isImporting}
-                        >
-                            <Upload />
-                            {isImporting ? 'Importing…' : 'Import'}
-                        </Button>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".xlsx,.xls,.csv"
-                            className="hidden"
-                            onChange={onFileSelected}
-                        />
-                        <Button asChild>
-                            <Link href={EnrollmentController.create.url()}>
-                                <Plus />
-                                New enrollment
-                            </Link>
-                        </Button>
+                        {can('enrollments.search') && (
+                            <Button variant="outline" asChild>
+                                <Link href={EnrollmentController.search.url()}>
+                                    Search by face
+                                </Link>
+                            </Button>
+                        )}
+                        {can('enrollments.export') && (
+                            <Button variant="outline" asChild>
+                                <a
+                                    href={EnrollmentController.export.url()}
+                                    download
+                                >
+                                    <Download />
+                                    Export
+                                </a>
+                            </Button>
+                        )}
+                        {can('enrollments.import') && (
+                            <>
+                                <Button variant="outline" asChild>
+                                    <a
+                                        href={EnrollmentController.importTemplate.url()}
+                                        download
+                                    >
+                                        <FileSpreadsheet />
+                                        Template
+                                    </a>
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    type="button"
+                                    onClick={triggerImport}
+                                    disabled={isImporting}
+                                >
+                                    <Upload />
+                                    {isImporting ? 'Importing…' : 'Import'}
+                                </Button>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".xlsx,.xls,.csv"
+                                    className="hidden"
+                                    onChange={onFileSelected}
+                                />
+                            </>
+                        )}
+                        {can('enrollments.create') && (
+                            <Button asChild>
+                                <Link href={EnrollmentController.create.url()}>
+                                    <Plus />
+                                    New enrollment
+                                </Link>
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -269,32 +281,36 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex justify-end gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        asChild
-                                                    >
-                                                        <Link
-                                                            href={EnrollmentController.edit.url(
-                                                                enrollment.id,
-                                                            )}
+                                                    {can('enrollments.update') && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            asChild
                                                         >
-                                                            Edit
-                                                        </Link>
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            confirmDelete(
-                                                                enrollment.id,
-                                                                enrollment.name,
-                                                            )
-                                                        }
-                                                    >
-                                                        <Trash2 />
-                                                        Delete
-                                                    </Button>
+                                                            <Link
+                                                                href={EnrollmentController.edit.url(
+                                                                    enrollment.id,
+                                                                )}
+                                                            >
+                                                                Edit
+                                                            </Link>
+                                                        </Button>
+                                                    )}
+                                                    {can('enrollments.delete') && (
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                confirmDelete(
+                                                                    enrollment.id,
+                                                                    enrollment.name,
+                                                                )
+                                                            }
+                                                        >
+                                                            <Trash2 />
+                                                            Delete
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

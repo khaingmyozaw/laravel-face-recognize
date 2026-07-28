@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Enums\UserRole;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -28,7 +28,7 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'role' => UserRole::Gate,
+            'role_id' => fn (): int => $this->roleId(Role::GATE),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -53,8 +53,8 @@ class UserFactory extends Factory
      */
     public function admin(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => UserRole::Admin,
+        return $this->state(fn (array $attributes): array => [
+            'role_id' => $this->roleId(Role::ADMIN),
         ]);
     }
 
@@ -63,8 +63,8 @@ class UserFactory extends Factory
      */
     public function gate(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => UserRole::Gate,
+        return $this->state(fn (array $attributes): array => [
+            'role_id' => $this->roleId(Role::GATE),
         ]);
     }
 
@@ -78,5 +78,21 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
             'two_factor_confirmed_at' => now(),
         ]);
+    }
+
+    private function roleId(string $name): int
+    {
+        $role = Role::query()->where('name', $name)->first();
+
+        if ($role !== null) {
+            return $role->id;
+        }
+
+        $factory = Role::factory();
+
+        return match ($name) {
+            Role::ADMIN => $factory->admin()->create()->id,
+            default => $factory->gate()->create()->id,
+        };
     }
 }

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\UserRole;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
+use App\Services\RoleService;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -16,6 +16,7 @@ class UserController extends Controller
 {
     public function __construct(
         private UserService $service,
+        private RoleService $roleService,
     ) {}
 
     public function index(): Response
@@ -28,7 +29,7 @@ class UserController extends Controller
     public function create(): Response
     {
         return Inertia::render('users/create', [
-            'roles' => $this->roleOptions(),
+            'roles' => $this->roleService->options(),
         ]);
     }
 
@@ -63,7 +64,7 @@ class UserController extends Controller
     {
         return Inertia::render('users/edit', [
             'user' => $this->service->find($user->id),
-            'roles' => $this->roleOptions(),
+            'roles' => $this->roleService->options(),
         ]);
     }
 
@@ -111,19 +112,5 @@ class UserController extends Controller
         ]);
 
         return to_route('users.index');
-    }
-
-    /**
-     * @return list<array{value: string, label: string}>
-     */
-    private function roleOptions(): array
-    {
-        return collect(UserRole::cases())
-            ->map(fn (UserRole $role): array => [
-                'value' => $role->value,
-                'label' => $role->label(),
-            ])
-            ->values()
-            ->all();
     }
 }

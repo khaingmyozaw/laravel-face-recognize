@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, ScanFace, Search, ShieldCheck, Users } from 'lucide-react';
+import { Menu, ScanFace, Search, Shield, ShieldCheck, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
@@ -24,10 +24,12 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { UserMenuContent } from '@/components/user-menu-content';
+import { useCan } from '@/hooks/use-can';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { index as enrollmentsIndex, search as enrollmentsSearch } from '@/routes/enrollments';
+import { index as rolesIndex } from '@/routes/roles';
 import { index as usersIndex } from '@/routes/users';
 import type { Auth, BreadcrumbItem, NavItem } from '@/types';
 
@@ -45,26 +47,44 @@ const activeItemStyles =
 export function AppHeader({ breadcrumbs = [] }: Props) {
     const page = usePage<PageProps>();
     const { auth } = page.props;
+    const can = useCan();
     const getInitials = useInitials();
     const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 
     const mainNavItems: NavItem[] = [
-        {
-            title: 'Enrollments',
-            href: enrollmentsIndex(),
-            icon: Users,
-        },
-        {
-            title: 'Search by face',
-            href: enrollmentsSearch(),
-            icon: ScanFace,
-        },
-        ...(auth.user?.role === 'admin'
+        ...(can('enrollments.view')
+            ? [
+                  {
+                      title: 'Enrollments',
+                      href: enrollmentsIndex(),
+                      icon: Users,
+                  } satisfies NavItem,
+              ]
+            : []),
+        ...(can('enrollments.search')
+            ? [
+                  {
+                      title: 'Search by face',
+                      href: enrollmentsSearch(),
+                      icon: ScanFace,
+                  } satisfies NavItem,
+              ]
+            : []),
+        ...(can('users.view')
             ? [
                   {
                       title: 'Users',
                       href: usersIndex(),
                       icon: ShieldCheck,
+                  } satisfies NavItem,
+              ]
+            : []),
+        ...(can('roles.view')
+            ? [
+                  {
+                      title: 'Roles',
+                      href: rolesIndex(),
+                      icon: Shield,
                   } satisfies NavItem,
               ]
             : []),
@@ -162,19 +182,21 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
 
                     <div className="ml-auto flex items-center space-x-2">
                         <div className="relative flex items-center space-x-1">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="group h-9 w-9 cursor-pointer"
-                                asChild
-                            >
-                                <Link
-                                    href={enrollmentsSearch()}
-                                    aria-label="Search by face"
+                            {can('enrollments.search') && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="group h-9 w-9 cursor-pointer"
+                                    asChild
                                 >
-                                    <Search className="!size-5 opacity-80 group-hover:opacity-100" />
-                                </Link>
-                            </Button>
+                                    <Link
+                                        href={enrollmentsSearch()}
+                                        aria-label="Search by face"
+                                    >
+                                        <Search className="!size-5 opacity-80 group-hover:opacity-100" />
+                                    </Link>
+                                </Button>
+                            )}
                         </div>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>

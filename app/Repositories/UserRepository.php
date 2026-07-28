@@ -10,13 +10,16 @@ class UserRepository
     public function paginate(int $perPage = 12): LengthAwarePaginator
     {
         return User::query()
+            ->with('assignedRole')
             ->latest()
             ->paginate($perPage);
     }
 
     public function findOrFail(int $id): User
     {
-        return User::query()->findOrFail($id);
+        return User::query()
+            ->with('assignedRole')
+            ->findOrFail($id);
     }
 
     /**

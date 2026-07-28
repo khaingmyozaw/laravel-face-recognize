@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -37,13 +37,14 @@ class UserTest extends TestCase
     public function test_admins_can_create_users(): void
     {
         $admin = User::factory()->admin()->create();
+        $gateRoleId = Role::query()->where('name', Role::GATE)->value('id');
 
         $response = $this->actingAs($admin)->post(route('users.store'), [
             'name' => 'Gate Operator',
             'email' => 'operator@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
-            'role' => UserRole::Gate->value,
+            'role_id' => $gateRoleId,
         ]);
 
         $user = User::query()->where('email', 'operator@example.com')->firstOrFail();
@@ -51,7 +52,7 @@ class UserTest extends TestCase
         $response->assertRedirect(route('users.show', $user));
         $this->assertDatabaseHas('users', [
             'email' => 'operator@example.com',
-            'role' => UserRole::Gate->value,
+            'role_id' => $gateRoleId,
         ]);
     }
 
@@ -62,11 +63,12 @@ class UserTest extends TestCase
             'name' => 'Old Name',
             'email' => 'old@example.com',
         ]);
+        $adminRoleId = Role::query()->where('name', Role::ADMIN)->value('id');
 
         $response = $this->actingAs($admin)->put(route('users.update', $user), [
             'name' => 'New Name',
             'email' => 'new@example.com',
-            'role' => UserRole::Admin->value,
+            'role_id' => $adminRoleId,
         ]);
 
         $response->assertRedirect(route('users.show', $user));
@@ -74,7 +76,7 @@ class UserTest extends TestCase
             'id' => $user->id,
             'name' => 'New Name',
             'email' => 'new@example.com',
-            'role' => UserRole::Admin->value,
+            'role_id' => $adminRoleId,
         ]);
     }
 
@@ -109,10 +111,12 @@ class UserTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
+        $gateRoleId = Role::query()->where('name', Role::GATE)->value('id');
+
         $response->assertRedirect(route('enrollments.index'));
         $this->assertDatabaseHas('users', [
             'email' => 'registered@example.com',
-            'role' => UserRole::Gate->value,
+            'role_id' => $gateRoleId,
         ]);
     }
 }

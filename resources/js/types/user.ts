@@ -1,7 +1,5 @@
-export type UserRole = 'admin' | 'gate';
-
 export type UserRoleOption = {
-    value: UserRole;
+    value: number;
     label: string;
 };
 
@@ -9,7 +7,8 @@ export type ManagedUser = {
     id: number;
     name: string;
     email: string;
-    role: UserRole;
+    role: string;
+    role_id: number;
     email_verified_at: string | null;
     created_at: string | null;
     updated_at: string | null;
@@ -26,4 +25,19 @@ export type PaginatedUsers = {
         label: string;
         active: boolean;
     }>;
+};
+
+export type PermissionOption = {
+    value: string;
+    label: string;
+};
+
+export type ManagedRole = {
+    id: number;
+    name: string;
+    label: string;
+    permissions: string[];
+    users_count?: number;
+    created_at: string | null;
+    updated_at: string | null;
 };

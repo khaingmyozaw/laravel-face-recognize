@@ -3,6 +3,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import UserController from '@/actions/App/Http/Controllers/UserController';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
+import { useCan } from '@/hooks/use-can';
 import { cn } from '@/lib/utils';
 import { index, show } from '@/routes/users';
 import type { Auth, ManagedUser } from '@/types';
@@ -17,7 +18,8 @@ type PageProps = {
 
 export default function UsersShow({ user }: Props) {
     const { auth } = usePage<PageProps>().props;
-    const isSelf = user.id === auth.user.id;
+    const can = useCan();
+    const isSelf = user.id === auth.user?.id;
 
     function confirmDelete() {
         if (!window.confirm(`Delete user ${user.name}?`)) {
@@ -41,20 +43,24 @@ export default function UsersShow({ user }: Props) {
                         <Button variant="outline" asChild>
                             <Link href={index()}>Back</Link>
                         </Button>
-                        <Button variant="outline" asChild>
-                            <Link href={UserController.edit.url(user.id)}>
-                                <Pencil />
-                                Edit
-                            </Link>
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            disabled={isSelf}
-                            onClick={confirmDelete}
-                        >
-                            <Trash2 />
-                            Delete
-                        </Button>
+                        {can('users.update') && (
+                            <Button variant="outline" asChild>
+                                <Link href={UserController.edit.url(user.id)}>
+                                    <Pencil />
+                                    Edit
+                                </Link>
+                            </Button>
+                        )}
+                        {can('users.delete') && (
+                            <Button
+                                variant="destructive"
+                                disabled={isSelf}
+                                onClick={confirmDelete}
+                            >
+                                <Trash2 />
+                                Delete
+                            </Button>
+                        )}
                     </div>
                 </div>
 
