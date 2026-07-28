@@ -70,6 +70,63 @@ class FaceRecognitionClient
         return $this->normalize($response->json());
     }
 
+    /**
+     * Identify a probe image against stored candidate embeddings (1:N).
+     *
+     * @param  list<array{user_id: string, embedding: list<float>}>  $candidates
+     * @return array{
+     *     face_count: int,
+     *     threshold: float,
+     *     matches: list<array{user_id: string, similarity: float, is_match: bool}>,
+     *     best_match: array{user_id: string, similarity: float, is_match: bool}|null,
+     * }|null
+     */
+    public function identify(
+        string $imageBase64,
+        array $candidates,
+        ?int $topK = null,
+        ?float $threshold = null,
+    ): ?array {
+        if ($imageBase64 === '' || $candidates === []) {
+            return null;
+        }
+
+        $payload = [
+            'image_base64' => $imageBase64,
+            'candidates' => $candidates,
+            'top_k' => $topK ?? (int) config('services.face.identify_top_k', 5),
+        ];
+
+        $configuredThreshold = $threshold ?? config('services.face.identify_threshold');
+
+        if ($configuredThreshold !== null) {
+            $payload['threshold'] = (float) $configuredThreshold;
+        }
+
+        try {
+            $response = $this->request()->post('/v1/identify', $payload);
+        } catch (Throwable $exception) {
+            Log::warning('Face identify request failed.', [
+                'error' => $exception->getMessage(),
+                'candidate_count' => count($candidates),
+            ]);
+
+            return null;
+        }
+
+        if (! $response->successful()) {
+            Log::warning('Face identify response was unsuccessful.', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'candidate_count' => count($candidates),
+            ]);
+
+            return null;
+        }
+
+        return $this->normalizeIdentify($response->json());
+    }
+
     private function request(): PendingRequest
     {
         $request = Http::baseUrl((string) config('services.face.url'))
@@ -106,6 +163,53 @@ class FaceRecognitionClient
             'bbox' => (array) ($payload['bbox'] ?? []),
             'det_score' => (float) ($payload['det_score'] ?? 0.0),
             'face_count' => (int) ($payload['face_count'] ?? 0),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     face_count: int,
+     *     threshold: float,
+     *     matches: list<array{user_id: string, similarity: float, is_match: bool}>,
+     *     best_match: array{user_id: string, similarity: float, is_match: bool}|null,
+     * }|null
+     */
+    private function normalizeIdentify(mixed $payload): ?array
+    {
+        if (! is_array($payload) || ! isset($payload['matches'], $payload['face_count'])) {
+            return null;
+        }
+
+        $matches = [];
+
+        foreach ((array) $payload['matches'] as $match) {
+            if (! is_array($match) || ! isset($match['user_id'], $match['similarity'])) {
+                continue;
+            }
+
+            $matches[] = [
+                'user_id' => (string) $match['user_id'],
+                'similarity' => (float) $match['similarity'],
+                'is_match' => (bool) ($match['is_match'] ?? false),
+            ];
+        }
+
+        $best = $payload['best_match'] ?? null;
+        $bestMatch = null;
+
+        if (is_array($best) && isset($best['user_id'], $best['similarity'])) {
+            $bestMatch = [
+                'user_id' => (string) $best['user_id'],
+                'similarity' => (float) $best['similarity'],
+                'is_match' => (bool) ($best['is_match'] ?? false),
+            ];
+        }
+
+        return [
+            'face_count' => (int) $payload['face_count'],
+            'threshold' => (float) ($payload['threshold'] ?? 0.0),
+            'matches' => $matches,
+            'best_match' => $bestMatch,
         ];
     }
 }

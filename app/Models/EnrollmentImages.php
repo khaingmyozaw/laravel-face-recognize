@@ -24,6 +24,10 @@ class EnrollmentImages extends Model
         'url',
     ];
 
+    protected $hidden = [
+        'embedding',
+    ];
+
     /**
      * @return array<string, string>
      */

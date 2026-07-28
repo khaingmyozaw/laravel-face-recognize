@@ -67,4 +67,33 @@ class EnrollmentRepository
     {
         $image->delete();
     }
+
+    /**
+     * Images that have a usable face embedding for 1:N identify.
+     *
+     * @return Collection<int, EnrollmentImages>
+     */
+    public function imagesWithEmbeddings(): Collection
+    {
+        return EnrollmentImages::query()
+            ->whereNotNull('embedding')
+            ->get(['id', 'enrollment_id', 'embedding']);
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return Collection<int, Enrollments>
+     */
+    public function findManyByIds(array $ids): Collection
+    {
+        if ($ids === []) {
+            return collect();
+        }
+
+        return Enrollments::query()
+            ->with('images')
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+    }
 }

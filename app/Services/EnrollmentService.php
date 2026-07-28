@@ -90,6 +90,153 @@ class EnrollmentService
     }
 
     /**
+     * Search enrollments by face photo via the face identify API.
+     *
+     * @return array{
+     *     matches: list<array{
+     *         similarity: float,
+     *         is_match: bool,
+     *         enrollment: Enrollments,
+     *     }>,
+     *     face_count: int|null,
+     *     threshold: float|null,
+     *     candidate_count: int,
+     *     error: string|null,
+     * }
+     */
+    public function searchByImage(UploadedFile $image): array
+    {
+        $candidates = $this->buildIdentifyCandidates();
+
+        if ($candidates === []) {
+            return $this->emptySearchResult(
+                candidateCount: 0,
+                error: __('No enrolled faces with embeddings are available to search.'),
+            );
+        }
+
+        $contents = @file_get_contents($image->getRealPath());
+
+        if ($contents === false) {
+            return $this->emptySearchResult(
+                candidateCount: count($candidates),
+                error: __('Unable to read the uploaded image.'),
+            );
+        }
+
+        $result = $this->faceClient->identify(
+            base64_encode($contents),
+            $candidates,
+        );
+
+        if ($result === null) {
+            return $this->emptySearchResult(
+                candidateCount: count($candidates),
+                error: __('Face search failed. Check that the face service is running and the image contains a face.'),
+            );
+        }
+
+        return [
+            'matches' => $this->resolveIdentifyMatches($result['matches']),
+            'face_count' => $result['face_count'],
+            'threshold' => $result['threshold'],
+            'candidate_count' => count($candidates),
+            'error' => null,
+        ];
+    }
+
+    /**
+     * @return list<array{user_id: string, embedding: list<float>}>
+     */
+    private function buildIdentifyCandidates(): array
+    {
+        return $this->repository->imagesWithEmbeddings()
+            ->map(function (EnrollmentImages $image): ?array {
+                $embedding = $image->embedding;
+
+                if (! is_array($embedding) || $embedding === []) {
+                    return null;
+                }
+
+                return [
+                    'user_id' => (string) $image->enrollment_id,
+                    'embedding' => array_values(array_map('floatval', $embedding)),
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  list<array{user_id: string, similarity: float, is_match: bool}>  $matches
+     * @return list<array{similarity: float, is_match: bool, enrollment: Enrollments}>
+     */
+    private function resolveIdentifyMatches(array $matches): array
+    {
+        $bestByEnrollment = [];
+
+        foreach ($matches as $match) {
+            $enrollmentId = (int) $match['user_id'];
+
+            if ($enrollmentId < 1) {
+                continue;
+            }
+
+            $existing = $bestByEnrollment[$enrollmentId] ?? null;
+
+            if ($existing === null || $match['similarity'] > $existing['similarity']) {
+                $bestByEnrollment[$enrollmentId] = $match;
+            }
+        }
+
+        $enrollments = $this->repository->findManyByIds(array_keys($bestByEnrollment));
+
+        $resolved = [];
+
+        foreach ($bestByEnrollment as $enrollmentId => $match) {
+            $enrollment = $enrollments->get($enrollmentId);
+
+            if ($enrollment === null) {
+                continue;
+            }
+
+            $resolved[] = [
+                'similarity' => $match['similarity'],
+                'is_match' => $match['is_match'],
+                'enrollment' => $enrollment,
+            ];
+        }
+
+        usort(
+            $resolved,
+            fn (array $left, array $right): int => $right['similarity'] <=> $left['similarity'],
+        );
+
+        return $resolved;
+    }
+
+    /**
+     * @return array{
+     *     matches: list<array{similarity: float, is_match: bool, enrollment: Enrollments}>,
+     *     face_count: int|null,
+     *     threshold: float|null,
+     *     candidate_count: int,
+     *     error: string|null,
+     * }
+     */
+    private function emptySearchResult(int $candidateCount, string $error): array
+    {
+        return [
+            'matches' => [],
+            'face_count' => null,
+            'threshold' => null,
+            'candidate_count' => $candidateCount,
+            'error' => $error,
+        ];
+    }
+
+    /**
      * @param  list<UploadedFile>  $images
      */
     private function storeImages(Enrollments $enrollment, array $images): void

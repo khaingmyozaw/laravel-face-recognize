@@ -14,6 +14,11 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::redirect('dashboard', '/enrollments')->name('dashboard');
 
+    Route::get('enrollments/search', [EnrollmentController::class, 'search'])
+        ->name('enrollments.search');
+    Route::post('enrollments/search', [EnrollmentController::class, 'identify'])
+        ->name('enrollments.identify');
+
     Route::resource('enrollments', EnrollmentController::class);
     Route::delete(
         'enrollments/{enrollment}/images/{image}',

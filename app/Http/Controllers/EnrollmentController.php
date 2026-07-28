@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SearchEnrollmentRequest;
 use App\Http\Requests\StoreEnrollmentRequest;
 use App\Http\Requests\UpdateEnrollmentRequest;
 use App\Models\Enrollments;
@@ -22,6 +23,48 @@ class EnrollmentController extends Controller
     {
         return Inertia::render('enrollments/index', [
             'enrollments' => $this->service->list(),
+        ]);
+    }
+
+    public function search(): Response
+    {
+        return Inertia::render('enrollments/search', [
+            'result' => null,
+        ]);
+    }
+
+    public function identify(SearchEnrollmentRequest $request): Response
+    {
+        $image = $request->file('image');
+
+        if (! $image instanceof UploadedFile) {
+            return Inertia::render('enrollments/search', [
+                'result' => [
+                    'matches' => [],
+                    'face_count' => null,
+                    'threshold' => null,
+                    'candidate_count' => 0,
+                    'error' => __('A valid image is required.'),
+                ],
+            ]);
+        }
+
+        try {
+            $result = $this->service->searchByImage($image);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $result = [
+                'matches' => [],
+                'face_count' => null,
+                'threshold' => null,
+                'candidate_count' => 0,
+                'error' => __('Unable to search by image. Please try again.'),
+            ];
+        }
+
+        return Inertia::render('enrollments/search', [
+            'result' => $result,
         ]);
     }
 

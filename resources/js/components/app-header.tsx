@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, Search, ShieldCheck, Users } from 'lucide-react';
+import { Menu, ScanFace, Search, ShieldCheck, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
@@ -27,7 +27,7 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
-import { index as enrollmentsIndex } from '@/routes/enrollments';
+import { index as enrollmentsIndex, search as enrollmentsSearch } from '@/routes/enrollments';
 import { index as usersIndex } from '@/routes/users';
 import type { Auth, BreadcrumbItem, NavItem } from '@/types';
 
@@ -53,6 +53,11 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
             title: 'Enrollments',
             href: enrollmentsIndex(),
             icon: Users,
+        },
+        {
+            title: 'Search by face',
+            href: enrollmentsSearch(),
+            icon: ScanFace,
         },
         ...(auth.user?.role === 'admin'
             ? [
@@ -161,8 +166,14 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 variant="ghost"
                                 size="icon"
                                 className="group h-9 w-9 cursor-pointer"
+                                asChild
                             >
-                                <Search className="!size-5 opacity-80 group-hover:opacity-100" />
+                                <Link
+                                    href={enrollmentsSearch()}
+                                    aria-label="Search by face"
+                                >
+                                    <Search className="!size-5 opacity-80 group-hover:opacity-100" />
+                                </Link>
                             </Button>
                         </div>
                         <DropdownMenu>

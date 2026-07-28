@@ -36,12 +36,19 @@ export default function EnrollmentsIndex({ enrollments }: Props) {
                         title="Enrollments"
                         description="Manage enrolled people and their face images."
                     />
-                    <Button asChild>
-                        <Link href={EnrollmentController.create.url()}>
-                            <Plus />
-                            New enrollment
-                        </Link>
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" asChild>
+                            <Link href={EnrollmentController.search.url()}>
+                                Search by face
+                            </Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href={EnrollmentController.create.url()}>
+                                <Plus />
+                                New enrollment
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 {enrollments.data.length === 0 ? (

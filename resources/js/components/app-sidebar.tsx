@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ShieldCheck, Users } from 'lucide-react';
+import { ScanFace, ShieldCheck, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -12,7 +12,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { index as enrollmentsIndex } from '@/routes/enrollments';
+import { index as enrollmentsIndex, search as enrollmentsSearch } from '@/routes/enrollments';
 import { index as usersIndex } from '@/routes/users';
 import type { Auth, NavItem } from '@/types';
 
@@ -28,6 +28,11 @@ export function AppSidebar() {
             title: 'Enrollments',
             href: enrollmentsIndex(),
             icon: Users,
+        },
+        {
+            title: 'Search by face',
+            href: enrollmentsSearch(),
+            icon: ScanFace,
         },
         ...(auth.user?.role === 'admin'
             ? [

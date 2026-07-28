@@ -115,4 +115,38 @@ class EnrollmentTest extends TestCase
         $this->assertDatabaseCount('enrollment_images', 0);
         Storage::disk('public')->assertMissing($path);
     }
+
+    public function test_authenticated_users_can_view_face_search_page(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('enrollments.search'))
+            ->assertOk();
+    }
+
+    public function test_face_search_requires_an_image(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('enrollments.identify'))
+            ->assertSessionHasErrors('image');
+    }
+
+    public function test_face_search_reports_when_no_embeddings_exist(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('enrollments.identify'), [
+            'image' => UploadedFile::fake()->image('probe.jpg'),
+        ]);
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('enrollments/search')
+            ->where('result.candidate_count', 0)
+            ->where('result.matches', [])
+            ->whereNot('result.error', null));
+    }
 }

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_FILES = 10;
+const DEFAULT_MAX_FILES = 10;
 const MAX_SIZE_MB = 5;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
@@ -19,11 +19,17 @@ type SelectedImage = {
 type ImageDropzoneProps = {
     name?: string;
     errors?: Record<string, string>;
+    label?: string;
+    maxFiles?: number;
+    multiple?: boolean;
 };
 
 export function ImageDropzone({
     name = 'images[]',
     errors = {},
+    label = 'Face images',
+    maxFiles = DEFAULT_MAX_FILES,
+    multiple = true,
 }: ImageDropzoneProps) {
     const inputId = useId();
     const inputRef = useRef<HTMLInputElement>(null);
@@ -31,6 +37,7 @@ export function ImageDropzone({
     const [images, setImages] = useState<SelectedImage[]>([]);
     const [isDragging, setIsDragging] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
+    const effectiveMax = multiple ? maxFiles : 1;
 
     imagesRef.current = images;
 
@@ -51,7 +58,11 @@ export function ImageDropzone({
 
     function addFiles(fileList: FileList | File[]) {
         const incoming = Array.from(fileList);
-        const nextError = validateIncoming(incoming, images.length);
+        const nextError = validateIncoming(
+            incoming,
+            multiple ? images.length : 0,
+            effectiveMax,
+        );
 
         if (nextError) {
             setLocalError(nextError);
@@ -60,14 +71,22 @@ export function ImageDropzone({
         }
 
         setLocalError(null);
-        setImages((current) => [
-            ...current,
-            ...incoming.map((file) => ({
-                id: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`,
-                file,
-                preview: URL.createObjectURL(file),
-            })),
-        ]);
+
+        const mapped = incoming.map((file) => ({
+            id: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`,
+            file,
+            preview: URL.createObjectURL(file),
+        }));
+
+        setImages((current) => {
+            if (!multiple) {
+                current.forEach((image) => URL.revokeObjectURL(image.preview));
+
+                return mapped.slice(0, 1);
+            }
+
+            return [...current, ...mapped];
+        });
     }
 
     function removeImage(id: string) {
@@ -89,9 +108,15 @@ export function ImageDropzone({
         addFiles(event.dataTransfer.files);
     }
 
+    const fieldError =
+        errors.images ??
+        errors.image ??
+        errors['images.0'] ??
+        errors['image.0'];
+
     return (
         <div className="grid gap-2">
-            <Label htmlFor={inputId}>Face images</Label>
+            <Label htmlFor={inputId}>{label}</Label>
 
             <input
                 ref={inputRef}
@@ -99,7 +124,7 @@ export function ImageDropzone({
                 name={name}
                 type="file"
                 accept={ACCEPTED_TYPES.join(',')}
-                multiple
+                multiple={multiple}
                 className="sr-only"
                 onChange={(event) => {
                     addFiles(event.target.files ?? []);
@@ -132,18 +157,21 @@ export function ImageDropzone({
                 <ImagePlus className="size-8 text-muted-foreground" />
                 <div className="space-y-1">
                     <p className="text-sm font-medium">
-                        Drag and drop images here, or click to browse
+                        Drag and drop{' '}
+                        {multiple ? 'images' : 'an image'} here, or click to
+                        browse
                     </p>
                     <p className="text-xs text-muted-foreground">
-                        JPEG, PNG, or WebP. Up to {MAX_FILES} images,{' '}
-                        {MAX_SIZE_MB}MB each.
+                        JPEG, PNG, or WebP
+                        {multiple
+                            ? `. Up to ${effectiveMax} images, ${MAX_SIZE_MB}MB each.`
+                            : `. Max ${MAX_SIZE_MB}MB.`}
                     </p>
                 </div>
             </label>
 
             <InputError message={localError ?? undefined} />
-            <InputError message={errors.images} />
-            <InputError message={errors['images.0']} />
+            <InputError message={fieldError} />
 
             {images.length > 0 && (
                 <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -185,13 +213,19 @@ function syncInputFiles(input: HTMLInputElement | null, files: File[]): void {
     input.files = dataTransfer.files;
 }
 
-function validateIncoming(files: File[], currentCount: number): string | null {
+function validateIncoming(
+    files: File[],
+    currentCount: number,
+    maxFiles: number,
+): string | null {
     if (files.length === 0) {
         return null;
     }
 
-    if (currentCount + files.length > MAX_FILES) {
-        return `You can upload up to ${MAX_FILES} images.`;
+    if (currentCount + files.length > maxFiles) {
+        return maxFiles === 1
+            ? 'Upload a single image only.'
+            : `You can upload up to ${maxFiles} images.`;
     }
 
     const invalidType = files.find(

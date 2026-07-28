@@ -39,6 +39,10 @@ return [
         'url' => env('FACE_API_URL', 'http://localhost:8088'),
         'key' => env('FACE_API_KEY'),
         'timeout' => (int) env('FACE_API_TIMEOUT', 15),
+        'identify_top_k' => (int) env('FACE_IDENTIFY_TOP_K', 5),
+        'identify_threshold' => env('FACE_IDENTIFY_THRESHOLD') !== null
+            ? (float) env('FACE_IDENTIFY_THRESHOLD')
+            : null,
     ],
 
 ];
