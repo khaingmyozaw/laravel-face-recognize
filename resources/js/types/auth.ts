@@ -13,7 +13,8 @@ export type Permission =
     | 'roles.view'
     | 'roles.create'
     | 'roles.update'
-    | 'roles.delete';
+    | 'roles.delete'
+    | 'backups.download';
 
 export type User = {
     id: number;

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ScanFace, Shield, ShieldCheck, Users } from 'lucide-react';
+import { HardDrive, ScanFace, Shield, ShieldCheck, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -13,6 +13,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useCan } from '@/hooks/use-can';
+import { index as backupsIndex } from '@/routes/backups';
 import { index as enrollmentsIndex, search as enrollmentsSearch } from '@/routes/enrollments';
 import { index as rolesIndex } from '@/routes/roles';
 import { index as usersIndex } from '@/routes/users';
@@ -55,6 +56,15 @@ export function AppSidebar() {
                       title: 'Roles',
                       href: rolesIndex(),
                       icon: Shield,
+                  } satisfies NavItem,
+              ]
+            : []),
+        ...(can('backups.download')
+            ? [
+                  {
+                      title: 'Backups',
+                      href: backupsIndex(),
+                      icon: HardDrive,
                   } satisfies NavItem,
               ]
             : []),

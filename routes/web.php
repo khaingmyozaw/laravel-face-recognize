@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Permission;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
@@ -107,6 +108,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('roles/{role}', [RoleController::class, 'destroy'])
         ->middleware('can:'.Permission::RolesDelete->value)
         ->name('roles.destroy');
+
+    Route::middleware('can:'.Permission::BackupsDownload->value)->group(function () {
+        Route::get('backups', [BackupController::class, 'index'])
+            ->name('backups.index');
+        Route::get('backups/database', [BackupController::class, 'database'])
+            ->name('backups.database');
+        Route::get('backups/images', [BackupController::class, 'images'])
+            ->name('backups.images');
+    });
 });
 
 require __DIR__.'/settings.php';

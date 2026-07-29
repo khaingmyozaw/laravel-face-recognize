@@ -19,6 +19,7 @@ enum Permission: string
     case RolesCreate = 'roles.create';
     case RolesUpdate = 'roles.update';
     case RolesDelete = 'roles.delete';
+    case BackupsDownload = 'backups.download';
 
     public function label(): string
     {
@@ -38,6 +39,7 @@ enum Permission: string
             self::RolesCreate => 'Create roles',
             self::RolesUpdate => 'Update roles',
             self::RolesDelete => 'Delete roles',
+            self::BackupsDownload => 'Download backups',
         };
     }
 
