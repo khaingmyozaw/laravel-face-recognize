@@ -206,7 +206,7 @@ class BackupService
 
         while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
             $columns = array_map(
-                fn (string $column): string => '"'.str_replace('"', '""', $column).'"',
+                fn (int|string $column): string => '"'.str_replace('"', '""', (string) $column).'"',
                 array_keys($row),
             );
             $values = array_map(fn (mixed $value): string => $this->sqliteLiteral($value), array_values($row));

@@ -14,7 +14,10 @@ import {
 } from '@/components/ui/sidebar';
 import { useCan } from '@/hooks/use-can';
 import { index as backupsIndex } from '@/routes/backups';
-import { index as enrollmentsIndex, search as enrollmentsSearch } from '@/routes/enrollments';
+import {
+    index as enrollmentsIndex,
+    search as enrollmentsSearch,
+} from '@/routes/enrollments';
 import { index as rolesIndex } from '@/routes/roles';
 import { index as usersIndex } from '@/routes/users';
 import type { NavItem } from '@/types';

@@ -1,5 +1,13 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Download, FileSpreadsheet, Plus, Search, Trash2, Upload, X } from 'lucide-react';
+import {
+    Download,
+    FileSpreadsheet,
+    Plus,
+    Search,
+    Trash2,
+    Upload,
+    X,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
@@ -179,7 +187,7 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
                             onChange={(event) => setSearch(event.target.value)}
                             placeholder="Search by name, NRC, address…"
                             aria-label="Search enrollments"
-                            className="pl-9 pr-9"
+                            className="pr-9 pl-9"
                         />
                         {search !== '' && (
                             <button
@@ -220,7 +228,7 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
                                     <th className="px-4 py-3 font-medium">
                                         Images
                                     </th>
-                                    <th className="px-4 py-3 font-medium text-right">
+                                    <th className="px-4 py-3 text-right font-medium">
                                         Actions
                                     </th>
                                 </tr>
@@ -281,7 +289,9 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex justify-end gap-2">
-                                                    {can('enrollments.update') && (
+                                                    {can(
+                                                        'enrollments.update',
+                                                    ) && (
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
@@ -296,7 +306,9 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
                                                             </Link>
                                                         </Button>
                                                     )}
-                                                    {can('enrollments.delete') && (
+                                                    {can(
+                                                        'enrollments.delete',
+                                                    ) && (
                                                         <Button
                                                             variant="destructive"
                                                             size="sm"

@@ -83,13 +83,16 @@ class RoleService
      */
     public function permissionOptions(): array
     {
-        return collect(Permission::cases())
+        /** @var list<array{value: string, label: string}> $options */
+        $options = collect(Permission::cases())
             ->map(fn (Permission $permission): array => [
                 'value' => $permission->value,
                 'label' => $permission->label(),
             ])
             ->values()
             ->all();
+
+        return $options;
     }
 
     /**
@@ -111,16 +114,18 @@ class RoleService
     }
 
     /**
-     * @param  array{name: string, label: string, permissions?: list<string>}  $data
+     * @param  array{name: string, label: string, permissions?: list<string>|array<int, mixed>}  $data
      * @return array{name: string, label: string, permissions: list<string>}
      */
     private function normalizedPayload(array $data): array
     {
         $permissions = array_values(array_unique(array_filter(
             $data['permissions'] ?? [],
-            fn (mixed $permission): bool => is_string($permission)
+            static fn (mixed $permission): bool => is_string($permission)
                 && Permission::tryFrom($permission) !== null,
         )));
+
+        /** @var list<string> $permissions */
 
         return [
             'name' => $data['name'],

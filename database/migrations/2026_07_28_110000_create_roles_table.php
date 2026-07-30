@@ -42,7 +42,7 @@ return new class extends Migration
             'updated_at' => now(),
         ]);
 
-        Schema::table('users', function (Blueprint $table) use ($gateId) {
+        Schema::table('users', function (Blueprint $table) {
             $table->foreignId('role_id')
                 ->nullable()
                 ->after('email')

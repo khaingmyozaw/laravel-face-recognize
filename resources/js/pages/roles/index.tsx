@@ -60,7 +60,7 @@ export default function RolesIndex({ roles }: Props) {
                                     <th className="px-4 py-3 font-medium">
                                         Users
                                     </th>
-                                    <th className="px-4 py-3 font-medium text-right">
+                                    <th className="px-4 py-3 text-right font-medium">
                                         Actions
                                     </th>
                                 </tr>

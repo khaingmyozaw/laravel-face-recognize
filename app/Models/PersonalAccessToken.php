@@ -40,6 +40,9 @@ class PersonalAccessToken extends Model
         ];
     }
 
+    /**
+     * @return MorphTo<Model, $this>
+     */
     public function tokenable(): MorphTo
     {
         return $this->morphTo('tokenable');

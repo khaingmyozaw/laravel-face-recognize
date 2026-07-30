@@ -53,7 +53,8 @@ class RoleRepository
      */
     public function options(): array
     {
-        return Role::query()
+        /** @var list<array{value: int, label: string}> $options */
+        $options = Role::query()
             ->orderBy('label')
             ->get(['id', 'label'])
             ->map(fn (Role $role): array => [
@@ -62,5 +63,7 @@ class RoleRepository
             ])
             ->values()
             ->all();
+
+        return $options;
     }
 }

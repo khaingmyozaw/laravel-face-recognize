@@ -1,6 +1,6 @@
 import { Form, Head, Link } from '@inertiajs/react';
 import { ScanFace, Video } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
 import Heading from '@/components/heading';
 import { ImageDropzone } from '@/components/image-dropzone';
@@ -32,16 +32,22 @@ type Props = {
     result: SearchResult | null;
 };
 
-export default function EnrollmentsSearch({ result }: Props) {
-    const [mode, setMode] = useState<SearchMode>('photo');
+function modeFromResult(result: SearchResult | null): SearchMode {
+    if (result?.frames_sampled != null) {
+        return 'video';
+    }
 
-    useEffect(() => {
-        if (result?.frames_sampled != null) {
-            setMode('video');
-        } else if (result?.face_count != null) {
-            setMode('photo');
-        }
-    }, [result]);
+    return 'photo';
+}
+
+export default function EnrollmentsSearch({ result }: Props) {
+    const [mode, setMode] = useState<SearchMode>(() => modeFromResult(result));
+    const [trackedResult, setTrackedResult] = useState(result);
+
+    if (result !== trackedResult) {
+        setTrackedResult(result);
+        setMode(modeFromResult(result));
+    }
 
     return (
         <>
@@ -183,9 +189,11 @@ function SearchResults({ result }: { result: SearchResult }) {
                             <th className="px-4 py-3 font-medium">Photo</th>
                             <th className="px-4 py-3 font-medium">Name</th>
                             <th className="px-4 py-3 font-medium">NRC</th>
-                            <th className="px-4 py-3 font-medium">Similarity</th>
+                            <th className="px-4 py-3 font-medium">
+                                Similarity
+                            </th>
                             <th className="px-4 py-3 font-medium">Match</th>
-                            <th className="px-4 py-3 font-medium text-right">
+                            <th className="px-4 py-3 text-right font-medium">
                                 Actions
                             </th>
                         </tr>

@@ -101,6 +101,8 @@ class User extends Authenticatable implements PasskeyUser
     {
         $this->loadMissing('assignedRole');
 
-        return $this->assignedRole?->permissions ?? [];
+        $role = $this->assignedRole;
+
+        return $role === null ? [] : $role->permissions;
     }
 }

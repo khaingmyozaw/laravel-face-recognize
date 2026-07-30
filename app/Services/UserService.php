@@ -14,6 +14,9 @@ class UserService
         private UserRepository $repository,
     ) {}
 
+    /**
+     * @return LengthAwarePaginator<int, User>
+     */
     public function list(int $perPage = 12): LengthAwarePaginator
     {
         return $this->repository->paginate($perPage);

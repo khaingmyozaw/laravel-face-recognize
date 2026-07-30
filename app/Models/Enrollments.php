@@ -31,6 +31,9 @@ class Enrollments extends Model
         ];
     }
 
+    /**
+     * @return HasMany<EnrollmentImages, $this>
+     */
     public function images(): HasMany
     {
         return $this->hasMany(EnrollmentImages::class, 'enrollment_id');

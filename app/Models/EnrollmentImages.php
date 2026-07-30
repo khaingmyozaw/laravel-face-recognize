@@ -5,7 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $enrollment_id
+ * @property string $file_path
+ * @property list<float>|null $embedding
+ * @property int|null $embedding_dim
+ * @property array<string, mixed>|null $bbox
+ * @property float|null $det_score
+ * @property int|null $face_count
+ * @property-read string $url
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class EnrollmentImages extends Model
 {
     protected $table = 'enrollment_images';
@@ -42,11 +56,17 @@ class EnrollmentImages extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Enrollments, $this>
+     */
     public function enrollment(): BelongsTo
     {
         return $this->belongsTo(Enrollments::class, 'enrollment_id');
     }
 
+    /**
+     * @return Attribute<non-falsy-string, never>
+     */
     protected function url(): Attribute
     {
         return Attribute::get(

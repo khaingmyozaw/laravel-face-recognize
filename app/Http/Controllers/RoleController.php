@@ -35,7 +35,9 @@ class RoleController extends Controller
     public function store(StoreRoleRequest $request): RedirectResponse
     {
         try {
-            $role = $this->service->create($request->validated());
+            /** @var array{name: string, label: string, permissions?: list<string>} $data */
+            $data = $request->validated();
+            $role = $this->service->create($data);
         } catch (Throwable $exception) {
             report($exception);
 
@@ -73,7 +75,9 @@ class RoleController extends Controller
     public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
     {
         try {
-            $this->service->update($role, $request->validated());
+            /** @var array{name: string, label: string, permissions?: list<string>} $data */
+            $data = $request->validated();
+            $this->service->update($role, $data);
         } catch (Throwable $exception) {
             report($exception);
 

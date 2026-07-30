@@ -41,7 +41,9 @@ export function VideoDropzone({
     const [isDragging, setIsDragging] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
 
-    videoRef.current = video;
+    useEffect(() => {
+        videoRef.current = video;
+    }, [video]);
 
     useEffect(() => {
         return () => {

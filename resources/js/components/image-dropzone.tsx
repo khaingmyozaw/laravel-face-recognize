@@ -39,7 +39,9 @@ export function ImageDropzone({
     const [localError, setLocalError] = useState<string | null>(null);
     const effectiveMax = multiple ? maxFiles : 1;
 
-    imagesRef.current = images;
+    useEffect(() => {
+        imagesRef.current = images;
+    }, [images]);
 
     useEffect(() => {
         return () => {
@@ -157,9 +159,8 @@ export function ImageDropzone({
                 <ImagePlus className="size-8 text-muted-foreground" />
                 <div className="space-y-1">
                     <p className="text-sm font-medium">
-                        Drag and drop{' '}
-                        {multiple ? 'images' : 'an image'} here, or click to
-                        browse
+                        Drag and drop {multiple ? 'images' : 'an image'} here,
+                        or click to browse
                     </p>
                     <p className="text-xs text-muted-foreground">
                         JPEG, PNG, or WebP

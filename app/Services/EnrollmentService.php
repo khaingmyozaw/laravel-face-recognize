@@ -54,6 +54,9 @@ class EnrollmentService
         ];
     }
 
+    /**
+     * @return LengthAwarePaginator<int, Enrollments>
+     */
     public function list(int $perPage = 12, ?string $search = null): LengthAwarePaginator
     {
         return $this->repository->paginate($perPage, $search);
@@ -249,22 +252,31 @@ class EnrollmentService
      */
     private function buildIdentifyCandidates(): array
     {
-        return $this->repository->imagesWithEmbeddings()
+        /** @var list<array{user_id: string, embedding: list<float>}> $candidates */
+        $candidates = $this->repository->imagesWithEmbeddings()
             ->map(function (EnrollmentImages $image): ?array {
                 $embedding = $image->embedding;
 
-                if (! is_array($embedding) || $embedding === []) {
+                if ($embedding === null || $embedding === []) {
                     return null;
                 }
 
+                /** @var list<float> $normalized */
+                $normalized = array_map(
+                    static fn (mixed $value): float => (float) $value,
+                    $embedding,
+                );
+
                 return [
                     'user_id' => (string) $image->enrollment_id,
-                    'embedding' => array_values(array_map('floatval', $embedding)),
+                    'embedding' => $normalized,
                 ];
             })
             ->filter()
             ->values()
             ->all();
+
+        return $candidates;
     }
 
     /**

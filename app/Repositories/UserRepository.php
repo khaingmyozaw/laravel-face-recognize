@@ -7,6 +7,9 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class UserRepository
 {
+    /**
+     * @return LengthAwarePaginator<int, User>
+     */
     public function paginate(int $perPage = 12): LengthAwarePaginator
     {
         return User::query()

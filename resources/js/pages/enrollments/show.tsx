@@ -3,11 +3,8 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
 import Heading from '@/components/heading';
-import {
-    ImagePreviewDialog
-    
-} from '@/components/image-preview-dialog';
-import type {PreviewImage} from '@/components/image-preview-dialog';
+import { ImagePreviewDialog } from '@/components/image-preview-dialog';
+import type { PreviewImage } from '@/components/image-preview-dialog';
 import { Button } from '@/components/ui/button';
 import { useCan } from '@/hooks/use-can';
 import { index, show } from '@/routes/enrollments';

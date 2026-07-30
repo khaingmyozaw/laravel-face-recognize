@@ -4,11 +4,8 @@ import { useState } from 'react';
 import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
 import { EnrollmentFormFields } from '@/components/enrollment-form-fields';
 import Heading from '@/components/heading';
-import {
-    ImagePreviewDialog
-    
-} from '@/components/image-preview-dialog';
-import type {PreviewImage} from '@/components/image-preview-dialog';
+import { ImagePreviewDialog } from '@/components/image-preview-dialog';
+import type { PreviewImage } from '@/components/image-preview-dialog';
 import { Button } from '@/components/ui/button';
 import { edit, index } from '@/routes/enrollments';
 import type { Enrollment } from '@/types';

@@ -1,5 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, ScanFace, Search, Shield, ShieldCheck, Users } from 'lucide-react';
+import {
+    Menu,
+    ScanFace,
+    Search,
+    Shield,
+    ShieldCheck,
+    Users,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
@@ -28,7 +35,10 @@ import { useCan } from '@/hooks/use-can';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
-import { index as enrollmentsIndex, search as enrollmentsSearch } from '@/routes/enrollments';
+import {
+    index as enrollmentsIndex,
+    search as enrollmentsSearch,
+} from '@/routes/enrollments';
 import { index as rolesIndex } from '@/routes/roles';
 import { index as usersIndex } from '@/routes/users';
 import type { Auth, BreadcrumbItem, NavItem } from '@/types';

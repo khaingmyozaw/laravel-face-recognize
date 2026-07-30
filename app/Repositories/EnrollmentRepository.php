@@ -10,6 +10,9 @@ use Illuminate\Support\Collection;
 
 class EnrollmentRepository
 {
+    /**
+     * @return LengthAwarePaginator<int, Enrollments>
+     */
     public function paginate(int $perPage = 12, ?string $search = null): LengthAwarePaginator
     {
         return Enrollments::query()
@@ -23,6 +26,10 @@ class EnrollmentRepository
             ->withQueryString();
     }
 
+    /**
+     * @param  Builder<Enrollments>  $query
+     * @return Builder<Enrollments>
+     */
     private function applySearch(Builder $query, string $search): Builder
     {
         $term = '%'.$search.'%';
@@ -74,13 +81,21 @@ class EnrollmentRepository
     public function attachImages(Enrollments $enrollment, array $images): Collection
     {
         return collect($images)->map(
-            fn (array $image): EnrollmentImages => $enrollment->images()->create($image),
+            function (array $image) use ($enrollment): EnrollmentImages {
+                /** @var EnrollmentImages $created */
+                $created = $enrollment->images()->create($image);
+
+                return $created;
+            },
         );
     }
 
     public function findImageOrFail(Enrollments $enrollment, int $imageId): EnrollmentImages
     {
-        return $enrollment->images()->whereKey($imageId)->firstOrFail();
+        /** @var EnrollmentImages $image */
+        $image = $enrollment->images()->whereKey($imageId)->firstOrFail();
+
+        return $image;
     }
 
     public function deleteImage(EnrollmentImages $image): void

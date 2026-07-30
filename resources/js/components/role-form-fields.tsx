@@ -21,9 +21,7 @@ export function RoleFormFields({
     processing,
     submitLabel,
 }: RoleFormFieldsProps) {
-    const [selected, setSelected] = useState<string[]>(
-        role?.permissions ?? [],
-    );
+    const [selected, setSelected] = useState<string[]>(role?.permissions ?? []);
 
     function togglePermission(permission: string, checked: boolean) {
         setSelected((current) => {
