@@ -11,12 +11,41 @@ Laravel + React (Inertia) app for person enrollment with face recognition. Enrol
 
 ## Requirements
 
-- PHP 8.3+, Composer
-- Node.js 20+ and npm
-- SQLite (default) or another database configured in `.env`
+- Docker Desktop (recommended via Laravel Sail), or PHP 8.3+, Composer, and Node.js 20+
+- MySQL (provided by Sail) or another database configured in `.env`
 - Face recognition service running and reachable (for embeddings)
 
-## Quick start
+## Quick start (Docker / Sail)
+
+App runs on port **7884**.
+
+```bash
+cp .env.example .env   # if needed
+# Ensure WWWUSER/WWWGROUP are set (numeric IDs). Sail sets them if you use ./vendor/bin/sail.
+./vendor/bin/sail build --no-cache
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail artisan migrate
+./vendor/bin/sail npm install
+./vendor/bin/sail npm run build
+./vendor/bin/sail artisan storage:link
+```
+
+App: [http://localhost:7884](http://localhost:7884)
+
+Useful Sail commands:
+
+```bash
+./vendor/bin/sail up -d          # start containers
+./vendor/bin/sail down           # stop containers
+./vendor/bin/sail artisan migrate
+./vendor/bin/sail npm run dev    # Vite HMR (port 5173)
+./vendor/bin/sail shell          # shell inside the app container
+```
+
+When the Face API runs on the host machine, keep `FACE_API_URL=http://host.docker.internal:8088` so Sail can reach it.
+
+## Quick start (local PHP)
 
 ```bash
 composer setup
@@ -24,7 +53,7 @@ php artisan storage:link
 composer run dev
 ```
 
-App: [http://localhost:8000](http://localhost:8000)
+App: [http://localhost:8000](http://localhost:8000) (or whatever `APP_URL` / `APP_PORT` you set)
 
 `composer setup` installs PHP/JS deps, copies `.env`, generates the app key, runs migrations, and builds assets. `composer run dev` starts the Laravel app, queue worker, and Vite together.
 
