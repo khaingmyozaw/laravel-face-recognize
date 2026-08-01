@@ -1,4 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form} from '@inertiajs/react';
+import { PageHead } from '@/components/page-head';
 import {
     index as confirmOptions,
     store as confirmStore,
@@ -14,7 +15,7 @@ import { store } from '@/routes/password/confirm';
 export default function ConfirmPassword() {
     return (
         <>
-            <Head title="Confirm password" />
+            <PageHead title="Confirm password" />
 
             <PasskeyVerify
                 routes={{

@@ -7,6 +7,7 @@ import Heading from '@/components/heading';
 import { ImagePreviewDialog } from '@/components/image-preview-dialog';
 import type { PreviewImage } from '@/components/image-preview-dialog';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from '@/hooks/use-translations';
 import { edit, index } from '@/routes/enrollments';
 import type { Enrollment } from '@/types';
 
@@ -16,9 +17,11 @@ type Props = {
 
 export default function EnrollmentsEdit({ enrollment }: Props) {
     const [preview, setPreview] = useState<PreviewImage | null>(null);
+    const { t } = useTranslations();
+    const pageTitle = t('Edit :name', { name: enrollment.name });
 
     function confirmDeleteImage(imageId: number) {
-        if (!window.confirm('Delete this image?')) {
+        if (!window.confirm(t('Delete this image?'))) {
             return;
         }
 
@@ -32,12 +35,12 @@ export default function EnrollmentsEdit({ enrollment }: Props) {
 
     return (
         <>
-            <Head title={`Edit ${enrollment.name}`} />
+            <Head title={pageTitle} />
 
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
                 <div className="flex items-start justify-between gap-4">
                     <Heading
-                        title={`Edit ${enrollment.name}`}
+                        title={pageTitle}
                         description="Update details or add more face images."
                     />
                     <Button variant="outline" asChild>

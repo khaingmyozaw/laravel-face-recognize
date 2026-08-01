@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     Download,
     FileSpreadsheet,
@@ -12,11 +12,13 @@ import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
 import Heading from '@/components/heading';
+import { PageHead } from '@/components/page-head';
 import { ImagePreviewDialog } from '@/components/image-preview-dialog';
 import type { PreviewImage } from '@/components/image-preview-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCan } from '@/hooks/use-can';
+import { useTranslations } from '@/hooks/use-translations';
 import { index as enrollmentsIndex } from '@/routes/enrollments';
 import type { PaginatedEnrollments } from '@/types';
 
@@ -29,6 +31,7 @@ type Props = {
 
 export default function EnrollmentsIndex({ enrollments, filters }: Props) {
     const can = useCan();
+    const { t } = useTranslations();
     const [preview, setPreview] = useState<PreviewImage | null>(null);
     const [search, setSearch] = useState<string>(filters.search ?? '');
     const [isImporting, setIsImporting] = useState(false);
@@ -66,7 +69,11 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
     }
 
     function confirmDelete(id: number, name: string) {
-        if (!window.confirm(`Delete enrollment for ${name}?`)) {
+        if (
+            !window.confirm(
+                t('Delete enrollment for :name?', { name }),
+            )
+        ) {
             return;
         }
 
@@ -103,7 +110,7 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
 
     return (
         <>
-            <Head title="Enrollments" />
+            <PageHead title="Enrollments" />
 
             <div className="flex flex-col gap-6 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
@@ -115,7 +122,7 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
                         {can('enrollments.search') && (
                             <Button variant="outline" asChild>
                                 <Link href={EnrollmentController.search.url()}>
-                                    Search by face
+                                    {t('Search by face')}
                                 </Link>
                             </Button>
                         )}
@@ -126,7 +133,7 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
                                     download
                                 >
                                     <Download />
-                                    Export
+                                    {t('Export')}
                                 </a>
                             </Button>
                         )}
@@ -138,7 +145,7 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
                                         download
                                     >
                                         <FileSpreadsheet />
-                                        Template
+                                        {t('Template')}
                                     </a>
                                 </Button>
                                 <Button
@@ -148,7 +155,9 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
                                     disabled={isImporting}
                                 >
                                     <Upload />
-                                    {isImporting ? 'Importing…' : 'Import'}
+                                    {isImporting
+                                        ? t('Importing…')
+                                        : t('Import')}
                                 </Button>
                                 <input
                                     ref={fileInputRef}
@@ -163,7 +172,7 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
                             <Button asChild>
                                 <Link href={EnrollmentController.create.url()}>
                                     <Plus />
-                                    New enrollment
+                                    {t('New enrollment')}
                                 </Link>
                             </Button>
                         )}
@@ -185,15 +194,15 @@ export default function EnrollmentsIndex({ enrollments, filters }: Props) {
                             name="search"
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Search by name, NRC, address…"
-                            aria-label="Search enrollments"
+                            placeholder={t('Search by name, NRC, address…')}
+                            aria-label={t('Search enrollments')}
                             className="pr-9 pl-9"
                         />
                         {search !== '' && (
                             <button
                                 type="button"
                                 onClick={clearSearch}
-                                aria-label="Clear search"
+                                aria-label={t('Clear search')}
                                 className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                             >
                                 <X className="size-4" />

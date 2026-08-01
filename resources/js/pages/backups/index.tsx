@@ -1,14 +1,14 @@
-import { Head } from '@inertiajs/react';
 import { Database, Download, FileArchive, Images } from 'lucide-react';
 import BackupController from '@/actions/App/Http/Controllers/BackupController';
 import Heading from '@/components/heading';
+import { PageHead } from '@/components/page-head';
 import { Button } from '@/components/ui/button';
 import { index as backupsIndex } from '@/routes/backups';
 
 export default function BackupsIndex() {
     return (
         <>
-            <Head title="Backups" />
+            <PageHead title="Backups" />
 
             <div className="flex flex-col gap-6 p-4">
                 <Heading

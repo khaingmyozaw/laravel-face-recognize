@@ -1,7 +1,8 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
 import UserController from '@/actions/App/Http/Controllers/UserController';
 import Heading from '@/components/heading';
+import { PageHead } from '@/components/page-head';
 import { Button } from '@/components/ui/button';
 import { useCan } from '@/hooks/use-can';
 import { index as usersIndex } from '@/routes/users';
@@ -29,7 +30,7 @@ export default function UsersIndex({ users }: Props) {
 
     return (
         <>
-            <Head title="Users" />
+            <PageHead title="Users" />
 
             <div className="flex flex-col gap-6 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">

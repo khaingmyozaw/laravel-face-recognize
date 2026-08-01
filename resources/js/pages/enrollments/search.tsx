@@ -1,8 +1,9 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Link } from '@inertiajs/react';
 import { ScanFace, Video } from 'lucide-react';
 import { useState } from 'react';
 import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
 import Heading from '@/components/heading';
+import { PageHead } from '@/components/page-head';
 import { ImageDropzone } from '@/components/image-dropzone';
 import { Button } from '@/components/ui/button';
 import { VideoDropzone } from '@/components/video-dropzone';
@@ -51,7 +52,7 @@ export default function EnrollmentsSearch({ result }: Props) {
 
     return (
         <>
-            <Head title="Search by face" />
+            <PageHead title="Search by face" />
 
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">

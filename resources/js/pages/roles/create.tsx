@@ -1,6 +1,7 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Link } from '@inertiajs/react';
 import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import Heading from '@/components/heading';
+import { PageHead } from '@/components/page-head';
 import { RoleFormFields } from '@/components/role-form-fields';
 import { Button } from '@/components/ui/button';
 import { create, index } from '@/routes/roles';
@@ -13,7 +14,7 @@ type Props = {
 export default function RolesCreate({ permissionOptions }: Props) {
     return (
         <>
-            <Head title="New role" />
+            <PageHead title="New role" />
 
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
                 <div className="flex items-start justify-between gap-4">

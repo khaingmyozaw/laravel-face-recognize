@@ -1,14 +1,15 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Link } from '@inertiajs/react';
 import EnrollmentController from '@/actions/App/Http/Controllers/EnrollmentController';
 import { EnrollmentFormFields } from '@/components/enrollment-form-fields';
 import Heading from '@/components/heading';
+import { PageHead } from '@/components/page-head';
 import { Button } from '@/components/ui/button';
 import { create, index } from '@/routes/enrollments';
 
 export default function EnrollmentsCreate() {
     return (
         <>
-            <Head title="New enrollment" />
+            <PageHead title="New enrollment" />
 
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
                 <div className="flex items-start justify-between gap-4">

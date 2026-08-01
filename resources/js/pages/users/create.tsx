@@ -1,6 +1,7 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Link } from '@inertiajs/react';
 import UserController from '@/actions/App/Http/Controllers/UserController';
 import Heading from '@/components/heading';
+import { PageHead } from '@/components/page-head';
 import { Button } from '@/components/ui/button';
 import { UserFormFields } from '@/components/user-form-fields';
 import { create, index } from '@/routes/users';
@@ -13,7 +14,7 @@ type Props = {
 export default function UsersCreate({ roles }: Props) {
     return (
         <>
-            <Head title="New user" />
+            <PageHead title="New user" />
 
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
                 <div className="flex items-start justify-between gap-4">

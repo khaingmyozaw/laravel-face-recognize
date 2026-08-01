@@ -1,3 +1,5 @@
+import { useTranslations } from '@/hooks/use-translations';
+
 export default function Heading({
     title,
     description,
@@ -7,6 +9,8 @@ export default function Heading({
     description?: string;
     variant?: 'default' | 'small';
 }) {
+    const { t } = useTranslations();
+
     return (
         <header className={variant === 'small' ? '' : 'mb-8 space-y-0.5'}>
             <h2
@@ -16,10 +20,12 @@ export default function Heading({
                         : 'text-xl font-semibold tracking-tight'
                 }
             >
-                {title}
+                {t(title)}
             </h2>
             {description && (
-                <p className="text-sm text-muted-foreground">{description}</p>
+                <p className="text-sm text-muted-foreground">
+                    {t(description)}
+                </p>
             )}
         </header>
     );

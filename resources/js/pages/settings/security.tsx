@@ -1,7 +1,8 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
 import { useRef } from 'react';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import Heading from '@/components/heading';
+import { PageHead } from '@/components/page-head';
 import InputError from '@/components/input-error';
 import type { Props as ManagePasskeysProps } from '@/components/manage-passkeys';
 import ManagePasskeys from '@/components/manage-passkeys';
@@ -23,7 +24,7 @@ export default function Security(props: Props) {
 
     return (
         <>
-            <Head title="Security settings" />
+            <PageHead title="Security settings" />
 
             <h1 className="sr-only">Security settings</h1>
 

@@ -3,6 +3,7 @@ import UserController from '@/actions/App/Http/Controllers/UserController';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { UserFormFields } from '@/components/user-form-fields';
+import { useTranslations } from '@/hooks/use-translations';
 import { edit, index } from '@/routes/users';
 import type { ManagedUser, UserRoleOption } from '@/types';
 
@@ -12,19 +13,22 @@ type Props = {
 };
 
 export default function UsersEdit({ user, roles }: Props) {
+    const { t } = useTranslations();
+    const pageTitle = t('Edit :name', { name: user.name });
+
     return (
         <>
-            <Head title={`Edit ${user.name}`} />
+            <Head title={pageTitle} />
 
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
                 <div className="flex items-start justify-between gap-4">
                     <Heading
-                        title={`Edit ${user.name}`}
+                        title={pageTitle}
                         description="Update account details or role."
                     />
                     <Button variant="outline" asChild>
                         <Link href={UserController.show.url(user.id)}>
-                            View
+                            {t('View')}
                         </Link>
                     </Button>
                 </div>

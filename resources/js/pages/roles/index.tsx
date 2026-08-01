@@ -1,7 +1,8 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import Heading from '@/components/heading';
+import { PageHead } from '@/components/page-head';
 import { Button } from '@/components/ui/button';
 import { useCan } from '@/hooks/use-can';
 import { index as rolesIndex } from '@/routes/roles';
@@ -24,7 +25,7 @@ export default function RolesIndex({ roles }: Props) {
 
     return (
         <>
-            <Head title="Roles" />
+            <PageHead title="Roles" />
 
             <div className="flex flex-col gap-6 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
