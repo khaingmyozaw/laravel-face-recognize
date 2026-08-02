@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { cn, createClientId } from '@/lib/utils';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const DEFAULT_MAX_FILES = 10;
@@ -75,7 +75,7 @@ export function ImageDropzone({
         setLocalError(null);
 
         const mapped = incoming.map((file) => ({
-            id: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`,
+            id: `${file.name}-${file.size}-${file.lastModified}-${createClientId()}`,
             file,
             preview: URL.createObjectURL(file),
         }));

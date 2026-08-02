@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { cn, createClientId } from '@/lib/utils';
 
 const ACCEPTED_TYPES = [
     'video/mp4',
@@ -80,7 +80,7 @@ export function VideoDropzone({
             }
 
             return {
-                id: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`,
+                id: `${file.name}-${file.size}-${file.lastModified}-${createClientId()}`,
                 file,
                 preview: URL.createObjectURL(file),
             };
